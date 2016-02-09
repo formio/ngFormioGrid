@@ -1,12 +1,12 @@
 {
   "name": "ng-formio-grid",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "authors": [
     "Travis Tidwell <travis@form.io>"
   ],
   "main": [
-    "dist/formio-grid.js",
-    "dist/formio-grid.css"
+    "dist/ng-formio-grid.min.js",
+    "dist/ng-formio-grid.min.css"
   ],
   "description": "The Form.IO form renderer.",
   "keywords": [
