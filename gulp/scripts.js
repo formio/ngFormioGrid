@@ -9,9 +9,9 @@ module.exports = function(gulp, plugins) {
 
     return bundle
       .bundle()
-      .pipe(plugins.source('formio-grid.js'))
+      .pipe(plugins.source('ng-formio-grid.js'))
       .pipe(gulp.dest('dist/'))
-      .pipe(plugins.rename('formio-grid.min.js'))
+      .pipe(plugins.rename('ng-formio-grid.min.js'))
       .pipe(plugins.streamify(plugins.uglify()))
       .pipe(gulp.dest('dist/'))
       .on('error', function(err){
