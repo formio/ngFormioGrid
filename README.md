@@ -23,9 +23,8 @@ bower install ng-formio-grid --save
 Once you have this installed, you can add this library to your application with the following ```<script>``` tag.
 
 ```
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-grid/3.1.0/ui-grid.min.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-grid/3.1.0/ui-grid.min.js"></script>
-<script src="bower_components/ngFormioGrid/dist/ng-formio-grid.min.js"></script>
+<link rel="stylesheet" href="https://cdn.rawgit.com/formio/ngFormioGrid/master/dist/ng-formio-grid-full.min.css" />
+<script src="https://cdn.rawgit.com/formio/ngFormioGrid/master/dist/ng-formio-grid-full.min.js"></script>
 ```
 
 You will now need to add this module within your Angular.js application declaration like so...

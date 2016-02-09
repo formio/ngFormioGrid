@@ -7,12 +7,13 @@ plugins.watchify = require('watchify');
 plugins.runSeq = require('run-sequence');
 gulp.task('clean', require('del').bind(null, ['dist']));
 gulp.task('eslint', require('./gulp/eslint')(gulp, plugins));
+gulp.task('assets', require('./gulp/assets')(gulp));
 gulp.task('scripts:formio', require('./gulp/scripts')(gulp, plugins));
 gulp.task('scripts:formio-full', require('./gulp/scripts-full')(gulp, plugins));
 gulp.task('scripts', ['scripts:formio', 'scripts:formio-full']);
 gulp.task('styles', require('./gulp/styles')(gulp, plugins));
 gulp.task('build', function(cb) {
-  plugins.runSeq(['clean', 'eslint'], 'scripts', 'styles', cb)
+  plugins.runSeq(['clean', 'eslint'], 'assets', 'scripts', 'styles', cb)
 });
 gulp.task('watch', require('./gulp/watch')(gulp, plugins));
 gulp.task('default', ['watch']);
