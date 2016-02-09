@@ -1,6 +1,6 @@
 Form.io Angular UI-Grid component
 --------------------------------------------
-This library allows Form.io submission data to be rendered within a ![](http://ui-grid.info/). This introduces a new
+This library allows Form.io submission data to be rendered within a ![http://ui-grid.info/]. This introduces a new
 directive that produces a Grid view of the submission data provided the Form within Form.io
 
 ```
@@ -9,6 +9,7 @@ directive that produces a Grid view of the submission data provided the Form wit
 
 This will render the Form.io Submissions like so.
 
+![](https://raw.githubusercontent.com/formio/ngFormioGrid/master/formio-grid.png)
 
 
 Installation
