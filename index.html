@@ -4,9 +4,11 @@
     <meta charset="utf-8">
     <title></title>
     <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-grid/3.1.0/ui-grid.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.rawgit.com/formio/ngFormioGrid/master/dist/ng-formio-grid-full.min.css" />
 </head>
-<body ng-app="formioGrid">
+<body ng-app="formioGrid" style="padding-top: 30px;">
 <!-- BROWSE HAPPY BEGINS HERE -->
 <style>
     .browsehappy {
@@ -36,12 +38,29 @@
 <!--[if IE 8]><p class="browsehappy"><img src="https://cdn.rawgit.com/alrra/browser-logos/master/internet-explorer/internet-explorer_64x64.png" />You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p><![endif]-->
 <!--[if IE 9]><p class="browsehappy"><img src="https://cdn.rawgit.com/alrra/browser-logos/master/internet-explorer/internet-explorer_64x64.png" />You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p><![endif]-->
 <!-- BROWSE HAPPY ENDS HERE -->
+<a href="https://github.com/formio/ngFormioGrid"><img style="position: absolute; top: 0; left: 0; border: 0; z-index:3000;" src="https://camo.githubusercontent.com/121cd7cbdc3e4855075ea8b558508b91ac463ac2/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png"></a>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="https://form.io"></a>
+        </div>
+    </div>
+</nav>
+<div class="jumbotron" style="margin-bottom:0; padding-bottom:20px;">
+    <div class="container">
+        <h2>Form.io Angular.js UI Grid</h2>
+        <p>This library provides a <a href="http://ui-grid.info">Angular.js UI Grid</a> display to the submission data of a <a href="https://form.io">Form.io</a> driven application.<br/>This provides your application a robust reporting mechanism to display your data in an easy to read data grid format.</p>
+        <p><strong><pre class="text-center"><code>&lt;formio-grid src="'https://examples.form.io/company'"&gt;&lt;/formio-grid&gt;</code></pre></strong></p>
+        <p><a class="btn btn-primary btn-lg" href="https://github.com/formio/ngFormioGrid" role="button">Learn more »</a></p>
+    </div>
+</div>
 <div class="container">
+    <h2>Example:</h2>
     <formio-grid src="'https://examples.form.io/company'"></formio-grid>
 </div>
 <script src="https://cdn.rawgit.com/formio/ngFormio/master/dist/formio-full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-grid/3.1.0/ui-grid.min.js"></script>
-<script src="https://cdn.rawgit.com/formio/ngFormioGrid/master/dist/ng-formio-grid.js"></script>
+<script src="https://cdn.rawgit.com/formio/ngFormioGrid/master/dist/ng-formio-grid-full.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 <script type="text/javascript">
     angular.module('formioGrid', ['ngFormioGrid']);
 </script>
