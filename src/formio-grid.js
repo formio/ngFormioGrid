@@ -43,16 +43,19 @@ angular.module('ngFormioGrid', [
             'formioComponents',
             'FormioUtils',
             '$scope',
+            'uiGridConstants',
             function(
                 Formio,
                 formioComponents,
                 FormioUtils,
-                $scope
+                $scope,
+                uiGridConstants
             ) {
                 var formio = null;
                 var paginationOptions = {
                     pageNumber: 1,
-                    pageSize: 25
+                    pageSize: 25,
+                    sort: null
                 };
 
                 if (angular.isUndefined($scope.query)) {
@@ -67,6 +70,7 @@ angular.module('ngFormioGrid', [
                     if (paginationOptions.pageNumber) {
                         $scope.query.skip = (paginationOptions.pageNumber - 1) * paginationOptions.pageSize;
                     }
+                    $scope.query.sort = paginationOptions.sort;
                     formio.loadSubmissions({params: $scope.query}).then(function(submissions) {
                         $scope.gridOptions.totalItems = submissions.serverCount;
                         $scope.gridOptions.data = submissions;
@@ -74,10 +78,10 @@ angular.module('ngFormioGrid', [
                 };
 
                 $scope.gridOptions = {
-                    paginationPageSizes: [25, 50, 75],
+                    paginationPageSizes: [5,25, 50, 75],
                     paginationPageSize: paginationOptions.pageSize,
                     useExternalPagination: true,
-                    enableSorting: false,
+                    useExternalSorting: true,
                     columnDefs: [],
                     data: [],
                     onRegisterApi: function(gridApi) {
@@ -85,6 +89,25 @@ angular.module('ngFormioGrid', [
                         gridApi.pagination.on.paginationChanged($scope, function (newPage, pageSize) {
                             paginationOptions.pageNumber = newPage;
                             paginationOptions.pageSize = pageSize;
+                            getPage();
+                        });
+                        // Ui Grid External sort code.
+                        gridApi.core.on.sortChanged($scope,function(grid, sortColumns) {
+                            if( sortColumns.length === 0) {
+                                  paginationOptions.sort = null;
+                            } else {
+                                switch( sortColumns[0].sort.direction ) {
+                                        case uiGridConstants.ASC:
+                                        paginationOptions.sort = sortColumns[0].colDef.field;
+                                        break;
+                                        case uiGridConstants.DESC:
+                                        paginationOptions.sort = '-'+sortColumns[0].colDef.field;
+                                        break;
+                                        case undefined:
+                                        paginationOptions.sort = null;
+                                        break;
+                                    }
+                            }
                             getPage();
                         });
                     }
