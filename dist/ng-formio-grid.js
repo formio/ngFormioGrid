@@ -7,29 +7,6 @@ angular.module('ngFormioGrid', [
   'ui.grid.pagination',
   'angular-bind-html-compile'
 ])
-.filter('formioTableView', [
-  'Formio',
-  'formioComponents',
-  '$interpolate',
-  function(
-    Formio,
-    formioComponents,
-    $interpolate
-  ) {
-    return function(value, component) {
-      var componentInfo = formioComponents.components[component.type];
-      if (!componentInfo.tableView) return value;
-      if (component.multiple && (value.length > 0)) {
-        var values = [];
-        angular.forEach(value, function(arrayValue) {
-          values.push(componentInfo.tableView(arrayValue, component, $interpolate));
-        });
-        return values;
-      }
-      return componentInfo.tableView(value, component, $interpolate);
-    };
-  }
-])
 .directive('formioGrid', function() {
   return {
     restrict: 'E',
@@ -158,7 +135,7 @@ angular.module('ngFormioGrid', [
                   component: component,
                   name: component.label,
                   field: 'data.' + component.key,
-                  cellTemplate: '<div class="ui-grid-cell-contents" bind-html-compile="COL_FIELD | formioTableView:this.col.colDef.component"></div>'
+                  cellTemplate: '<div class="ui-grid-cell-contents" bind-html-compile="COL_FIELD | tableFieldView:this.col.colDef.component"></div>'
                 });
               }
             });
