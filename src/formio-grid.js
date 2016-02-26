@@ -60,7 +60,7 @@ angular.module('ngFormioGrid', [
         };
 
         $scope.buttons = $scope.buttons ||  [{
-            id: '_id',
+            id: 'view',
             key: 'view',
             label: '',
             width: 35,
@@ -141,7 +141,7 @@ angular.module('ngFormioGrid', [
             $scope.buttons.forEach(function(button) {
               var btnClass = button.class || 'btn btn-sm btn-default';
               $scope.gridOptions.columnDefs.push({
-                name: button.label,
+                name: button.key,
                 field: button.key,
                 width: button.width,
                 cellTemplate: '<a class="' + btnClass + '" ng-click="grid.appScope.buttonClick(row.entity, \'' + button.key + '\')"><span class="' + button.icon + '" aria-hidden="true"></span>' + button.label + '</a>'
