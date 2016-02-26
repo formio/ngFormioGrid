@@ -64,6 +64,7 @@ angular.module('ngFormioGrid', [
         $scope.buttons = $scope.buttons ||  [{
             id: 'view',
             key: 'view',
+            event: 'rowView',
             label: '',
             width: 35,
             icon: 'glyphicon glyphicon-share-alt'
@@ -125,12 +126,8 @@ angular.module('ngFormioGrid', [
           }
         };
 
-        $scope.buttonClick = function(entity, button) {
-          // For compatibility
-          if (button === 'view') {
-            $scope.$emit('rowView', entity);
-          }
-          $scope.$emit('buttonClick', entity, button);
+        $scope.buttonClick = function(event, entity) {
+          $scope.$emit(event, entity);
         };
 
         // Load a new grid view.
@@ -143,10 +140,10 @@ angular.module('ngFormioGrid', [
             $scope.buttons.forEach(function(button) {
               var btnClass = button.class || 'btn btn-sm btn-default';
               $scope.gridOptions.columnDefs.push({
-                name: button.key,
+                name: button.id,
                 field: button.key,
                 width: button.width,
-                cellTemplate: '<a class="' + btnClass + '" ng-click="grid.appScope.buttonClick(row.entity, \'' + button.key + '\')"><span class="' + button.icon + '" aria-hidden="true"></span>' + button.label + '</a>'
+                cellTemplate: '<a class="' + btnClass + '" ng-click="grid.appScope.buttonClick(\'' + button.event + '\', row.entity)"><span class="' + button.icon + '" aria-hidden="true"></span>' + button.label + '</a>'
               });
             });
             FormioUtils.eachComponent(form.components, function(component) {
