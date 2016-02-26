@@ -35,7 +35,8 @@ angular.module('ngFormioGrid', [
     scope: {
       src: '=',
       query: '=?',
-      columns: '=?'
+      columns: '=?',
+      buttons: '=?'
     },
     template: '<div><div ui-grid="gridOptions" ui-grid-pagination class="grid"></div></div>',
     controller: [
@@ -57,6 +58,14 @@ angular.module('ngFormioGrid', [
           pageSize: 25,
           sort: null
         };
+
+        $scope.buttons = $scope.buttons ||  [{
+            id: '_id',
+            key: 'view',
+            label: '',
+            width: 35,
+            icon: 'glyphicon glyphicon-share-alt'
+          }];
 
         if (angular.isUndefined($scope.query)) {
           $scope.query = {};
@@ -113,17 +122,30 @@ angular.module('ngFormioGrid', [
             });
           }
         };
+
+        $scope.buttonClick = function(entity, button) {
+          // For compatibility
+          if (button === 'view') {
+            $scope.$emit('rowView', entity);
+          }
+          $scope.$emit('buttonClick', entity, button);
+        };
+
         // Load a new grid view.
         var loadGrid = function() {
           if (!$scope.src) { return; }
           formio = new Formio($scope.src);
           formio.loadForm().then(function(form) {
+
             $scope.gridOptions.columnDefs = [];
-            $scope.gridOptions.columnDefs.push({
-              name: '',
-              field: '_id',
-              width: 35,
-              cellTemplate: '<a class="btn btn-sm btn-default" ng-click="$emit(\'rowView\', row.entity)"><span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span></a>'
+            $scope.buttons.forEach(function(button) {
+              var btnClass = button.class || 'btn btn-sm btn-default';
+              $scope.gridOptions.columnDefs.push({
+                name: button.label,
+                field: button.key,
+                width: button.width,
+                cellTemplate: '<a class="' + btnClass + '" ng-click="grid.appScope.buttonClick(row.entity, \'' + button.key + '\')"><span class="' + button.icon + '" aria-hidden="true"></span>' + button.label + '</a>'
+              });
             });
             FormioUtils.eachComponent(form.components, function(component) {
               if (
