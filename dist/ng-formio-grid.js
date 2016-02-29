@@ -52,6 +52,7 @@ angular.module('ngFormioGrid', [
 
         var getPage = function() {
           if (!formio) { return; }
+          if (!$scope.gridOptions.columnDefs.length) { return; }
           if (paginationOptions.pageSize) {
             $scope.query.limit = paginationOptions.pageSize;
           }
@@ -116,9 +117,12 @@ angular.module('ngFormioGrid', [
           formio = new Formio($scope.src);
           formio.loadForm().then(function(form) {
 
+            var names = {};
+            var increment = 1;
             $scope.gridOptions.columnDefs = [];
             $scope.buttons.forEach(function(button) {
               var btnClass = button.class || 'btn btn-sm btn-default';
+              names[button.label] = true;
               $scope.gridOptions.columnDefs.push({
                 name: button.label,
                 field: button.key,
@@ -126,28 +130,47 @@ angular.module('ngFormioGrid', [
                 cellTemplate: '<a class="' + btnClass + '" ng-click="grid.appScope.buttonClick(row.entity, \'' + button.key + '\')"><span class="' + button.icon + '" aria-hidden="true"></span>' + button.label + '</a>'
               });
             });
+
             FormioUtils.eachComponent(form.components, function(component) {
+              if (!component.input || !component.tableView || !component.key) {
+                return;
+              }
+
               if (
-                ($scope.columns && ($scope.columns.indexOf(component.key) !== -1)) ||
-                (!$scope.columns && component.input && component.tableView)
+                (!$scope.columns) ||
+                ($scope.columns.length && ($scope.columns.indexOf(component.key) !== -1))
               ) {
+
+                // Ensure that the labels do not collide.
+                var label = component.label || component.key;
+                while (names.hasOwnProperty(label)) {
+                  label = component.label + increment++;
+                }
+
+                names[label] = true;
                 $scope.gridOptions.columnDefs.push({
                   component: component,
-                  name: component.label,
+                  name: label,
                   field: 'data.' + component.key,
                   cellTemplate: '<div class="ui-grid-cell-contents" bind-html-compile="COL_FIELD | tableFieldView:this.col.colDef.component"></div>'
                 });
               }
             });
+
+            getPage();
           });
-          getPage();
         };
 
         $scope.$on('reloadGrid', function(event, src, query) {
-          $scope.src = src;
-          $scope.query = query;
+          if (src) {
+            $scope.src = src;
+          }
+          if (query) {
+            $scope.query = query;
+          }
           loadGrid();
         });
+
         loadGrid();
       }
     ]
