@@ -83,7 +83,6 @@ angular.module('ngFormioGrid', [
              return $scope.apiReady.promise;
           };
 
-
           $scope.gridOptions = angular.merge({
             paginationPageSizes: [25, 50, 75],
             paginationPageSize: paginationOptions.pageSize,
