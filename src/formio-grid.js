@@ -59,14 +59,14 @@ angular.module('ngFormioGrid', [
           sort: null
         };
 
-        $scope.buttons = $scope.buttons ||  [{
-            id: 'view',
-            key: 'view',
-            event: 'rowView',
-            label: '',
-            width: 35,
-            icon: 'glyphicon glyphicon-share-alt'
-          }];
+        $scope.buttons = $scope.buttons || [{
+          id: 'view',
+          key: 'view',
+          event: 'rowView',
+          label: '',
+          width: 35,
+          icon: 'glyphicon glyphicon-share-alt'
+        }];
 
         if (angular.isUndefined($scope.query)) {
           $scope.query = {};
@@ -88,20 +88,61 @@ angular.module('ngFormioGrid', [
           });
         };
 
+        var debounce = function (func, threshold, execAsap) {
+          var timeout;
+          return function debounced () {
+          var obj = this, args = arguments;
+            function delayed () {
+              if (!execAsap)
+              func.apply(obj, args);
+              timeout = null;
+            };
+            if (timeout)
+            clearTimeout(timeout);
+            else if (execAsap)
+            func.apply(obj, args);
+            timeout = setTimeout(delayed, threshold || 100);
+          };
+        };
+
         $scope.gridOptions = {
           paginationPageSizes: [25, 50, 75],
           paginationPageSize: paginationOptions.pageSize,
           useExternalPagination: true,
           useExternalSorting: true,
+          enableFiltering: true,
+          useExternalFiltering: true,
           columnDefs: [],
           data: [],
           onRegisterApi: function(gridApi) {
             $scope.gridApi = gridApi;
+
             gridApi.pagination.on.paginationChanged($scope, function(newPage, pageSize) {
               paginationOptions.pageNumber = newPage;
               paginationOptions.pageSize = pageSize;
               getPage();
             });
+
+            gridApi.core.on.filterChanged($scope, debounce(function() {
+              paginationOptions.pageNumber = 0;
+              $scope.query = [];
+              var grid = this.grid; 
+              
+              angular.forEach(grid.columns, function (column) {
+                var fieldName = column.field;
+                var value = column.filters[0].term;
+                if (value) {
+                  if(column.colDef.component.type === 'number') {
+                    $scope.query[fieldName]=value;
+                  }
+                  else {
+                    $scope.query[fieldName+'__regex']='/'+value+'/';
+                  }
+                }
+              });    
+              getPage();
+            },
+            1000));
             // Ui Grid External sort code.
             gridApi.core.on.sortChanged($scope,function(grid, sortColumns) {
               if (sortColumns.length === 0) {
@@ -133,16 +174,14 @@ angular.module('ngFormioGrid', [
           if (!$scope.src) { return; }
           formio = new Formio($scope.src);
           formio.loadForm().then(function(form) {
-
             $scope.gridOptions.columnDefs = [];
-            $scope.buttons.forEach(function(button) {
-              var btnClass = button.class || 'btn btn-sm btn-default';
-              $scope.gridOptions.columnDefs.push({
-                name: button.id,
-                field: button.key,
-                width: button.width,
-                cellTemplate: '<a class="' + btnClass + '" ng-click="grid.appScope.buttonClick(\'' + button.event + '\', row.entity)"><span class="' + button.icon + '" aria-hidden="true"></span>' + button.label + '</a>'
-              });
+            $scope.gridOptions.columnDefs.push({
+              name: '',
+              field: '_id',
+              width: 35,
+              enableFiltering: false,
+              enableSorting:false,
+              cellTemplate: '<a class="btn btn-sm btn-default" ng-click="$emit(\'rowView\', row.entity)"><span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span></a>'
             });
             FormioUtils.eachComponent(form.components, function(component) {
               if (
