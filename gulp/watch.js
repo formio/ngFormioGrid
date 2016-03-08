@@ -1,32 +1,16 @@
 var path = require('path');
 module.exports = function(gulp, plugins) {
-
   return function() {
     var bundle = plugins.browserify({
-      entries: './src/formio.js',
+      entries: './src/formio-grid.js',
       debug: true
     });
 
-    bundle.transform({
-      global: true
-    }, 'uglifyify');
-
-    var build = function() {
-      return bundle
-        .bundle()
-        .pipe(plugins.source('formio.js'))
-        .pipe(plugins.rename('formio.min.js'))
-        .pipe(gulp.dest('dist/'))
-        .on('error', function(err){
-          console.log(err);
-          this.emit('end');
-        });
-    };
-
+    var build = require('./scripts')(gulp, plugins, bundle);
     bundle = plugins.watchify(bundle);
     bundle.on('update', function(files) {
       console.log('Changed files: ', files.map(path.relative.bind(path, process.cwd())).join(', '));
-      console.log('Rebuilding dist/formio.js...');
+      console.log('Rebuilding dist/formio-grid.js...');
       build();
     });
     bundle.on('log', function(msg) {
@@ -35,5 +19,4 @@ module.exports = function(gulp, plugins) {
 
     return build();
   };
-
 };
