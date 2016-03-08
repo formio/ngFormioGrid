@@ -1,6 +1,5 @@
 var path = require('path');
 module.exports = function(gulp, plugins) {
-
   return function() {
     var bundle = plugins.browserify({
       entries: './src/formio-grid.js',

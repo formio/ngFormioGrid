@@ -13,7 +13,8 @@ angular.module('ngFormioGrid', [
       src: '=',
       query: '=?',
       columns: '=?',
-      buttons: '=?'
+      buttons: '=?',
+      gridOptions: '=?'
     },
     template: '<div><div ui-grid="gridOptions" ui-grid-pagination class="grid"></div></div>',
     controller: [
@@ -30,11 +31,11 @@ angular.module('ngFormioGrid', [
         uiGridConstants
       ) {
         var formio = null;
-        var paginationOptions = {
+        var paginationOptions = angular.merge({
           pageNumber: 1,
           pageSize: 25,
           sort: null
-        };
+        }, $scope.gridOptions);
 
         $scope.buttons = $scope.buttons ||  [{
             id: 'view',
@@ -119,38 +120,44 @@ angular.module('ngFormioGrid', [
               var btnClass = button.class || 'btn btn-sm btn-default';
               names[button.label] = true;
               $scope.gridOptions.columnDefs.push({
-                name: button.id,
+                name: button.label,
                 field: button.key,
                 width: button.width,
                 cellTemplate: '<a class="' + btnClass + '" ng-click="grid.appScope.buttonClick(\'' + button.event + '\', row.entity)"><span class="' + button.icon + '" aria-hidden="true"></span>' + button.label + '</a>'
               });
             });
 
-            FormioUtils.eachComponent(form.components, function(component) {
-              if (!component.input || !component.tableView || !component.key) {
-                return;
+            var addColumn = function(component) {
+              // Ensure that the labels do not collide.
+              var label = component.label || component.key;
+              while (names.hasOwnProperty(label)) {
+                label = component.label + increment++;
               }
 
-              if (
-                (!$scope.columns) ||
-                ($scope.columns.length && ($scope.columns.indexOf(component.key) !== -1))
-              ) {
+              names[label] = true;
+              $scope.gridOptions.columnDefs.push({
+                component: component,
+                name: label,
+                field: 'data.' + component.key,
+                cellTemplate: '<div class="ui-grid-cell-contents" bind-html-compile="COL_FIELD | tableFieldView:this.col.colDef.component"></div>'
+              });
+            };
 
-                // Ensure that the labels do not collide.
-                var label = component.label || component.key;
-                while (names.hasOwnProperty(label)) {
-                  label = component.label + increment++;
+            if ($scope.columns && $scope.columns.length > 0) {
+              var components = FormioUtils.flattenComponents(form.components);
+              $scope.columns.forEach(function(key) {
+                if (components.hasOwnProperty(key)) {
+                  addColumn(components[key]);
                 }
-
-                names[label] = true;
-                $scope.gridOptions.columnDefs.push({
-                  component: component,
-                  name: label,
-                  field: 'data.' + component.key,
-                  cellTemplate: '<div class="ui-grid-cell-contents" bind-html-compile="COL_FIELD | tableFieldView:this.col.colDef.component"></div>'
-                });
-              }
-            });
+              });
+            }
+            else {
+              FormioUtils.eachComponent(form.components, function(component) {
+                if (component.input && component.tableView && component.key) {
+                  addColumn(component);
+                }
+              });
+            }
 
             getPage();
           });
