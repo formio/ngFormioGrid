@@ -55,6 +55,7 @@ angular.module('ngFormioGrid', [
   'ngSanitize',
   'ui.grid',
   'ui.grid.pagination',
+  'ui.grid.resizeColumns',
   'angular-bind-html-compile'
 ])
 .directive('formioGrid', function() {
@@ -68,7 +69,7 @@ angular.module('ngFormioGrid', [
       buttons: '=?',
       gridOptions: '=?'
     },
-    template: '<div><div ui-grid="gridOptions" ui-grid-pagination class="grid"></div></div>',
+    template: '<div><div ui-grid="gridOptions" ui-grid-pagination ui-grid-resize-columns ui-grid-move-columns class="grid"></div></div>',
     controller: [
       'Formio',
       'formioComponents',
