@@ -4,6 +4,7 @@ angular.module('ngFormioGrid', [
   'ui.grid',
   'ui.grid.pagination',
   'ui.grid.resizeColumns',
+  'ui.grid.autoResize',
   'angular-bind-html-compile'
 ])
 .directive('formioGrid', function() {
@@ -17,18 +18,20 @@ angular.module('ngFormioGrid', [
       buttons: '=?',
       gridOptions: '=?'
     },
-    template: '<div><div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-resize-columns ui-grid-move-columns class="grid"></div></div>',
+    template: '<div><div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns class="grid"></div></div>',
     controller: [
+      '$scope',
+      '$timeout',
       'Formio',
       'formioComponents',
       'FormioUtils',
-      '$scope',
       'uiGridConstants',
       function(
+        $scope,
+        $timeout,
         Formio,
         formioComponents,
         FormioUtils,
-        $scope,
         uiGridConstants
       ) {
         var formio = null;
@@ -69,7 +72,16 @@ angular.module('ngFormioGrid', [
           formio.loadSubmissions({params: $scope.query}).then(function(submissions) {
             $scope.gridOptionsDef.totalItems = submissions.serverCount;
             $scope.gridOptionsDef.data = submissions;
+            setTableHeight(submissions.length);
           });
+        };
+
+        var setTableHeight = function(renderableRows) {
+          $timeout(function() {
+            var newHeight = ($scope.gridApi.grid.getVisibleRowCount() * 30) + 60;
+            angular.element(document.getElementsByClassName('grid')[0]).css('height', newHeight + 'px');
+          }, 10);
+          return renderableRows;
         };
 
         $scope.gridOptionsDef = angular.merge({
