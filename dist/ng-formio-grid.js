@@ -81,9 +81,7 @@ angular.module('ngFormioGrid', [
         };
 
         var setTableHeight = function(renderableRows) {
-          console.log('before', $element);
           $timeout(function() {
-            console.log('after', $element);
             var newHeight = ($scope.gridApi.grid.getVisibleRowCount() * 30) + 60;
             angular.element($element).children().css('height', newHeight + 'px');
           }, 10);
