@@ -23,6 +23,7 @@ angular.module('ngFormioGrid', [
     template: '<div><div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns class="grid"></div></div>',
     controller: [
       '$scope',
+      '$element',
       '$timeout',
       'Formio',
       'formioComponents',
@@ -30,6 +31,7 @@ angular.module('ngFormioGrid', [
       'uiGridConstants',
       function(
         $scope,
+        $element,
         $timeout,
         Formio,
         formioComponents,
@@ -79,9 +81,11 @@ angular.module('ngFormioGrid', [
         };
 
         var setTableHeight = function(renderableRows) {
+          console.log('before', $element);
           $timeout(function() {
+            console.log('after', $element);
             var newHeight = ($scope.gridApi.grid.getVisibleRowCount() * 30) + 60;
-            angular.element(document.getElementsByClassName('grid')[0]).css('height', newHeight + 'px');
+            angular.element($element).children().css('height', newHeight + 'px');
           }, 10);
           return renderableRows;
         };
