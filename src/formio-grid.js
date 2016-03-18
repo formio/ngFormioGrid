@@ -37,9 +37,7 @@ angular.module('ngFormioGrid', [
       query: '=?',
       columns: '=?',
       gridOptions: '=?',
-      refreshGrid: '=?',
       formioGridDateBetween: '=?',
-      formioSelectRow: '=?',
       exposeGridApi: '=?'
     },
     template: '<div><div ui-grid="gridOptions" ui-grid-selection ui-grid-pagination class="grid"></div></div>',
@@ -49,12 +47,14 @@ angular.module('ngFormioGrid', [
       'FormioUtils',
       '$scope',
       '$q',
+      'uiGridConstants',
       function(
         Formio,
         formioComponents,
         FormioUtils,
         $scope,
-        $q
+        $q,
+        uiGridConstants
       ) {
           var formio = null;
           var paginationOptions = {
@@ -64,7 +64,7 @@ angular.module('ngFormioGrid', [
           $scope.apiReady = $q.defer();
 
           if (angular.isUndefined($scope.query)) {
-              $scope.query = {};
+            $scope.query = {};
           }
 
           var getPage = function() {
@@ -75,12 +75,11 @@ angular.module('ngFormioGrid', [
             if (paginationOptions.pageNumber) {
               $scope.query.skip = (paginationOptions.pageNumber - 1) * paginationOptions.pageSize;
             }
-
             formio.loadSubmissions({params: $scope.query}).then(function(submissions) {
               $scope.gridOptions.totalItems = submissions.serverCount;
               $scope.gridOptions.data = submissions;
             });
-             return $scope.apiReady.promise;
+            return $scope.apiReady.promise;
           };
 
           $scope.gridOptions = angular.merge({
@@ -89,8 +88,8 @@ angular.module('ngFormioGrid', [
             useExternalPagination: true,
             enableSorting: false,
             enableFiltering: false,
-            enableRowSelection: true,
-            enableSelectAll: true,
+            enableRowSelection: false,
+            enableSelectAll: true,            
             columnDefs: [],
             data: [],
             onRegisterApi: function(gridApi) {
@@ -101,15 +100,8 @@ angular.module('ngFormioGrid', [
                 paginationOptions.pageSize = pageSize;
                 getPage();
               });
-              
-              $scope.gridApi.grid.registerRowsProcessor( $scope.singleFilter, 200 );
             }              
           },$scope.gridOptions);   
-
-          $scope.refreshGrid = function(){                                  
-            getPage();
-            return $scope.apiReady.promise;
-          };  
 
           // Filter record based on two dates.
           $scope.formioGridDateBetween = function(startDate, endDate){                  
@@ -121,6 +113,16 @@ angular.module('ngFormioGrid', [
           $scope.exposeGridApi = function(){
             return $scope.apiReady.promise;
           };
+
+          $scope.$on('selectGridRow', function(event, record) {
+            $scope.gridApi.selection.selectRow(record);
+            return $scope.apiReady.promise;
+          });
+
+          $scope.$on('refreshGrid', function(event) {
+            getPage();
+            return $scope.apiReady.promise;
+          });
 
           // Load a new grid view.
           var loadGrid = function() {
@@ -149,7 +151,6 @@ angular.module('ngFormioGrid', [
                 cellTemplate: '<div class="operations"><a class="btn btn-default btn-xs" ng-click="$emit(\'rowEdit\', row.entity)"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span></a><a class="btn btn-danger btn-xs" ng-click="$emit(\'rowDelete\', row.entity)"><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></a></div>'
               });  
             });
-
             getPage();                    
           };
 
@@ -158,7 +159,6 @@ angular.module('ngFormioGrid', [
             $scope.query = query;
             loadGrid();
           });
-
           loadGrid();
       }
     ]
