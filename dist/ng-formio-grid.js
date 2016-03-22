@@ -6,6 +6,7 @@ angular.module('ngFormioGrid', [
   'ui.grid',
   'ui.grid.pagination',
   'ui.grid.resizeColumns',
+  'ui.grid.autoResize',
   'angular-bind-html-compile'
 ])
 .directive('formioGrid', function() {
@@ -19,18 +20,22 @@ angular.module('ngFormioGrid', [
       buttons: '=?',
       gridOptions: '=?'
     },
-    template: '<div><div ui-grid="gridOptions" ui-grid-pagination ui-grid-resize-columns ui-grid-move-columns class="grid"></div></div>',
+    template: '<div><div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns class="grid"></div></div>',
     controller: [
+      '$scope',
+      '$element',
+      '$timeout',
       'Formio',
       'formioComponents',
       'FormioUtils',
-      '$scope',
       'uiGridConstants',
       function(
+        $scope,
+        $element,
+        $timeout,
         Formio,
         formioComponents,
         FormioUtils,
-        $scope,
         uiGridConstants
       ) {
         var formio = null;
@@ -38,7 +43,7 @@ angular.module('ngFormioGrid', [
           pageNumber: 1,
           pageSize: 25,
           sort: null
-        }, $scope.gridOptions);
+        }, $scope.gridOptionsDef);
 
         $scope.buttons = $scope.buttons ||  [{
             id: 'view',
@@ -49,13 +54,17 @@ angular.module('ngFormioGrid', [
             icon: 'glyphicon glyphicon-share-alt'
           }];
 
+        $scope.buttonClick = function(event, entity) {
+          $scope.$emit(event, entity);
+        };
+
         if (angular.isUndefined($scope.query)) {
           $scope.query = {};
         }
 
         var getPage = function() {
           if (!formio) { return; }
-          if (!$scope.gridOptions.columnDefs.length) { return; }
+          if (!$scope.gridOptionsDef.columnDefs.length) { return; }
           if (paginationOptions.pageSize) {
             $scope.query.limit = paginationOptions.pageSize;
           }
@@ -65,12 +74,21 @@ angular.module('ngFormioGrid', [
           
           $scope.query.sort = paginationOptions.sort;
           formio.loadSubmissions({params: $scope.query}).then(function(submissions) {
-            $scope.gridOptions.totalItems = submissions.serverCount;
-            $scope.gridOptions.data = submissions;
+            $scope.gridOptionsDef.totalItems = submissions.serverCount;
+            $scope.gridOptionsDef.data = submissions;
+            setTableHeight(submissions.length);
           });
         };
 
-        $scope.gridOptions = {
+        var setTableHeight = function(renderableRows) {
+          $timeout(function() {
+            var newHeight = ($scope.gridApi.grid.getVisibleRowCount() * 30) + 60;
+            angular.element($element).children().css('height', newHeight + 'px');
+          }, 10);
+          return renderableRows;
+        };
+
+        $scope.gridOptionsDef = angular.merge({
           paginationPageSizes: [25, 50, 75],
           paginationPageSize: paginationOptions.pageSize,
           useExternalPagination: true,
@@ -104,11 +122,7 @@ angular.module('ngFormioGrid', [
               getPage();
             });
           }
-        };
-
-        $scope.buttonClick = function(event, entity) {
-          $scope.$emit(event, entity);
-        };
+        }, $scope.gridOptions);
 
         // Load a new grid view.
         var loadGrid = function() {
@@ -118,11 +132,11 @@ angular.module('ngFormioGrid', [
 
             var names = {};
             var increment = 1;
-            $scope.gridOptions.columnDefs = [];
+            $scope.gridOptionsDef.columnDefs = ($scope.gridOptions && $scope.gridOptions.columnDefs ? angular.copy($scope.gridOptions.columnDefs) : []);
             $scope.buttons.forEach(function(button) {
               var btnClass = button.class || 'btn btn-sm btn-default';
               names[button.label] = true;
-              $scope.gridOptions.columnDefs.push({
+              $scope.gridOptionsDef.columnDefs.unshift({
                 name: button.label,
                 field: button.key,
                 width: button.width,
@@ -138,7 +152,7 @@ angular.module('ngFormioGrid', [
               }
 
               names[label] = true;
-              $scope.gridOptions.columnDefs.push({
+              $scope.gridOptionsDef.columnDefs.push({
                 component: component,
                 name: label,
                 field: 'data.' + component.key,
