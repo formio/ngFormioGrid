@@ -218,8 +218,7 @@ angular.module('ngFormioGrid', [
 
             var names = {};
             var increment = 1;
-            $scope.gridOptionsDef.columnDefs = ($scope.gridOptionsDef && $scope.gridOptionsDef.columnDefs ? angular.copy($scope.gridOptionsDef.columnDefs) : []);
-            $scope.gridOptionsDef.columnDefs = [];
+            $scope.gridOptionsDef.columnDefs = ($scope.gridOptions && $scope.gridOptions.columnDefs ? angular.copy($scope.gridOptions.columnDefs) : []);
             $scope.buttons.forEach(function(button) {
               var btnClass = button.class || 'btn btn-sm btn-default';
               names[button.label] = true;
