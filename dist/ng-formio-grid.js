@@ -79,20 +79,6 @@ angular.module('ngFormioGrid', [
         };
         setupGridColumns();
 
-        // Setup the grid columns.
-        var gridColumns = $scope.columns;
-        if (Array.isArray($scope.columns)) {
-          gridColumns = {};
-          $scope.columns.forEach(function(key) {
-            if (typeof key === 'string') {
-              gridColumns[key] = {};
-            }
-            else {
-              gridColumns[key.key] = key;
-            }
-          });
-        }
-
         var setSort = function(sort, field) {
           switch(sort.direction) {
             case uiGridConstants.ASC:
