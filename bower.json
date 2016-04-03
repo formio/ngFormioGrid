@@ -4,7 +4,7 @@
   "authors": [
     "Travis Tidwell <travis@form.io>"
   ],
-  "main": "dist/ng-formio-grid.min.js",
+  "main": "dist/ng-formio-grid.js",
   "description": "The Form.IO form renderer.",
   "keywords": [
     "angularjs",
@@ -14,7 +14,6 @@
   "dependencies": {
     "angular": "^1.5.0",
     "angular-sanitize": "^1.5.0",
-    "angular-bind-html-compile": "^1.1.0",
     "angular-ui-grid": "^3.1.1",
     "ng-formio": "^1.2.1"
   },
