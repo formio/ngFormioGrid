@@ -30,7 +30,6 @@
   },
   "dependencies": {
     "angular": "^1.5.0",
-    "angular-bind-html-compile": "github:incuna/angular-bind-html-compile",
     "angular-sanitize": "^1.5.0",
     "angular-ui-grid": "^3.1.1",
     "ng-formio": "^1.2.1"
