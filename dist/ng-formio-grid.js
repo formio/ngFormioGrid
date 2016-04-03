@@ -113,6 +113,8 @@ angular.module('ngFormioGrid', [
           endpoint: '',
           paginationPageSizes: [25, 50, 75],
           paginationPageSize: paginationOptions.pageSize,
+          enableHorizontalScrollbar: uiGridConstants.scrollbars.NEVER,
+          enableVerticalScrollbar: uiGridConstants.scrollbars.NEVER,
           useExternalPagination: true,
           useExternalSorting: true,
           enableRowSelection: false,
