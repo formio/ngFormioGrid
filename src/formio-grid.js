@@ -8,43 +8,20 @@ angular.module('ngFormioGrid', [
   'ui.grid.selection'
 
 ])
-  .filter('tableFieldView', [
-  'Formio',
-  'formioComponents',
-  '$interpolate',
-  function (
-      Formio,
-      formioComponents,
-      $interpolate
-  ) {
-      return function (value, component) {
-        var componentInfo = formioComponents.components[component.type];
-        if (!componentInfo.tableView) return value;
-        if (component.multiple && (value.length > 0)) {
-          var values = [];
-          angular.forEach(value, function (arrayValue) {
-            values.push(componentInfo.tableView(arrayValue, component, $interpolate));
-          });
-          return values;
-        }
-        return componentInfo.tableView(value, component, $interpolate);
-      };
-  }
-])
   .directive('formioGridCell', ['$compile', 'formioTableView', function ($compile, formioTableView) {
-    return {
-      restrict: 'A',
-      link: function (scope, element) {
-        var value = scope.grid.getCellValue(scope.row, scope.col);
-        var component = scope.col.colDef.component;
-        var html = formioTableView(value, component);
-        if (Array.isArray(html)) {
-          html = html.join(', ');
+      return {
+        restrict: 'A',
+        link: function (scope, element) {
+          var value = scope.grid.getCellValue(scope.row, scope.col);
+          var component = scope.col.colDef.component;
+          var html = formioTableView(value, component);
+          if (Array.isArray(html)) {
+            html = html.join(', ');
+          }
+          element.html(html);
         }
-        element.html(html);
-      }
-    };
-}])
+      };
+  }])
   .directive('formioGrid', function () {
     return {
       restrict: 'E',
@@ -66,7 +43,6 @@ angular.module('ngFormioGrid', [
       'formioComponents',
       'FormioUtils',
       'uiGridConstants',
-      '$q',
       '$http',
       function (
           $scope,
@@ -76,10 +52,8 @@ angular.module('ngFormioGrid', [
           formioComponents,
           FormioUtils,
           uiGridConstants,
-          $q,
           $http
       ) {
-          //$scope.apiReady = $q.defer();
           var formio = null;
           var paginationOptions = angular.merge({
             pageNumber: 1,
@@ -137,7 +111,6 @@ angular.module('ngFormioGrid', [
             data: [],
             onRegisterApi: function (gridApi) {
               $scope.gridApi = gridApi;
-              //$scope.apiReady.resolve(gridApi);
               gridApi.pagination.on.paginationChanged($scope, function (newPage, pageSize) {
                 paginationOptions.pageNumber = newPage;
                 paginationOptions.pageSize = pageSize;
@@ -186,7 +159,6 @@ angular.module('ngFormioGrid', [
 
           $scope.$on('refreshGrid', function (event) {
             getPage();
-            //return $scope.apiReady.promise;
           });
 
           paginationOptions.pageSize = $scope.gridOptionsDef.paginationPageSize;
