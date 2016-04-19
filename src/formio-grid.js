@@ -138,27 +138,9 @@ angular.module('ngFormioGrid', [
             }
           }, $scope.gridOptions);
 
-          // Filter record based on two dates.
-          /*$scope.formioGridDateBetween = function (startDate, endDate) {
-            $scope.query = {
-              'data.date__gte': startDate,
-              'data.date__lte': endDate
-            };
-            getPage();
-            return $scope.apiReady.promise;
-          };*/
-
-          /*$scope.exposeGridApi = function () {
-            console.log('in grid api');
-            return $scope.apiReady.promise;
-          };*/
-
+          // Make the passed row in parameter selected.
           $scope.$on('selectGridRow', function (event, record) {
             $scope.gridApi.selection.selectRow(record);
-          });
-
-          $scope.$on('refreshGrid', function (event) {
-            getPage();
           });
 
           paginationOptions.pageSize = $scope.gridOptionsDef.paginationPageSize;
@@ -174,6 +156,7 @@ angular.module('ngFormioGrid', [
           }
 
           var getPage = function () {
+
             if (!formio) {
               return;
             }
@@ -204,6 +187,7 @@ angular.module('ngFormioGrid', [
                 console.log('Error: ' + response.message);
               });
             } else {
+              $scope.gridOptionsDef.data = [];
               formio.loadSubmissions({
                 params: $scope.query
               }).then(function (submissions) {
@@ -293,7 +277,7 @@ angular.module('ngFormioGrid', [
                 };
 
                 // Allow for other options.
-              ['width', 'sortable', 'visible', 'minWidth', 'maxWidth', 'resizable', 'cellClass', 'headerCellClass', 'headerCellTemplate'].forEach(function (option) {
+                ['width', 'sortable', 'visible', 'minWidth', 'maxWidth', 'resizable', 'cellClass', 'headerCellClass', 'headerCellTemplate'].forEach(function (option) {
                   if (options.hasOwnProperty(option)) {
                     column[option] = options[option];
                   }
@@ -316,22 +300,11 @@ angular.module('ngFormioGrid', [
                 });
               } else {
 
-                // Setup the operation column.
-                var operationColumn = {
-                  name: 'operations',
-                  form: form,
-                  field: 'data.edit',
-                  width: 80,
-                  enableColumnMenu: false,
-                  cellTemplate: '<div class="operations"><a class="btn btn-default btn-xs" ng-click="$emit(\'rowEdit\', row.entity)"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span></a><a class="btn btn-danger btn-xs" ng-click="$emit(\'rowDelete\', row.entity)"><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></a></div>'
-                };
-
                 FormioUtils.eachComponent(form.components, function (component) {
                   if (component.input && component.tableView && component.key) {
                     addColumn(component);
                   }
                 });
-                $scope.gridOptionsDef.columnDefs.push(operationColumn);
               }
 
               getPage();
