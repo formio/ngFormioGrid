@@ -6,7 +6,6 @@ angular.module('ngFormioGrid', [
   'ui.grid.resizeColumns',
   'ui.grid.autoResize',
   'ui.grid.selection'
-
 ])
   .directive('formioGridCell', ['$compile', 'formioTableView', function ($compile, formioTableView) {
       return {
@@ -31,8 +30,7 @@ angular.module('ngFormioGrid', [
         query: '=?',
         columns: '=?',
         buttons: '=?',
-        gridOptions: '=?',
-        gridOptionsDef: '=?'
+        gridOptions: '=?'
       },
       template: '<div><div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns ui-grid-selection class="grid"></div></div>',
       controller: [
