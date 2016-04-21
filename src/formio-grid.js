@@ -134,6 +134,12 @@ angular.module('ngFormioGrid', [
             });
           }
         }, $scope.gridOptions);
+        
+        // Make the passed row in parameter selected.
+        $scope.$on('selectGridRow', function (event, record) {
+          $scope.gridApi.selection.selectRow(record);
+        });
+        
         paginationOptions.pageSize = $scope.gridOptionsDef.paginationPageSize;
 
         $scope.buttons = $scope.buttons ||  [];
@@ -168,15 +174,18 @@ angular.module('ngFormioGrid', [
             }).then(function successCallback(response) {
               $scope.gridOptionsDef.data = response.data;
               setTableHeight(response.data.length);
+              $scope.$emit("onData", response.data);
             }, function errorCallback(response) {
               console.log('Error: ' + response.message);
             });
           }
           else {
+            $scope.gridOptionsDef.data = [];
             formio.loadSubmissions({params: $scope.query}).then(function(submissions) {
               $scope.gridOptionsDef.totalItems = submissions.serverCount;
               $scope.gridOptionsDef.data = submissions;
               setTableHeight(submissions.length);
+              $scope.$emit("onData", submissions);
             });
           }
         };
