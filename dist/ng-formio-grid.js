@@ -251,7 +251,7 @@ angular.module('ngFormioGrid', [
 
               names[label] = true;
 
-              var template = options.template || '<formio-grid-cell class="ui-grid-cell-contents" data="row.entity[col.field]" component="col.colDef.component"></formio-grid-cell>';
+              var template = options.template || '<formio-grid-cell class="ui-grid-cell-contents" data="COL_FIELD" component="col.colDef.component"></formio-grid-cell>';
               if (options.link) {
                 var linkClass = options.linkClass;
                 var linkEvent = options.linkEvent || ($scope.gridOptionsDef.namespace + 'View');
