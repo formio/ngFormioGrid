@@ -122,6 +122,14 @@ angular.module('ngFormioGrid', [
               getPage();
             });
 
+            //Identifying if the first row of the grid loaded
+            var firstRow = true;
+            gridApi.core.on.rowsRendered($scope, function() {
+                if (gridApi.grid.renderContainers.body.visibleRowCache.length === 0) { return; }
+                $scope.$emit("onGridLoadDone");
+                firstRow = false;
+            });
+
             // When the row is selected, emit an event.
             gridApi.selection.on.rowSelectionChanged($scope, function(row){
               $scope.$emit($scope.gridOptionsDef.namespace + 'Select', row.entity, row.isSelected);
@@ -202,8 +210,10 @@ angular.module('ngFormioGrid', [
               $scope.gridOptionsDef.data = submissions;
               setTableHeight(submissions.length);
               $scope.$emit("onData", submissions);
+
             });
           }
+         
         };
 
         var setTableHeight = function(renderableRows) {
@@ -312,8 +322,8 @@ angular.module('ngFormioGrid', [
                 }
               });
             }
-
             getPage();
+
           });
         };
 
