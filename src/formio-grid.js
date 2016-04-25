@@ -9,15 +9,19 @@ angular.module('ngFormioGrid', [
 ])
 .directive('formioGridCell', ['$compile', 'formioTableView', function ($compile, formioTableView) {
   return {
-    restrict: 'A',
+    restrict: 'E',
+    scope: {
+      data: '=',
+      component: '='
+    },
     link: function (scope, element) {
-      var value = scope.grid.getCellValue(scope.row, scope.col);
-      var component = scope.col.colDef.component;
-      var html = formioTableView(value, component);
-      if (Array.isArray(html)) {
-        html = html.join(', ');
-      }
-      element.html(html);
+      scope.$watch('data', function(data) {
+        var html = formioTableView(data, scope.component);
+        if (Array.isArray(html)) {
+          html = html.join(', ');
+        }
+        element.html(html);
+      });
     }
   };
 }])
@@ -94,6 +98,8 @@ angular.module('ngFormioGrid', [
         $scope.gridOptionsDef = angular.merge({
           namespace: 'row',
           dataRoot: 'data.',
+          responseData: '',
+          responseTotal: '',
           endpoint: '',
           paginationPageSizes: [25, 50, 75],
           paginationPageSize: paginationOptions.pageSize,
@@ -180,7 +186,15 @@ angular.module('ngFormioGrid', [
                 'x-jwt-token': Formio.getToken()
               }
             }).then(function successCallback(response) {
-              $scope.gridOptionsDef.data = response.data;
+              if ($scope.gridOptionsDef.responseData) {
+                $scope.gridOptionsDef.data = response.data[$scope.gridOptionsDef.responseData];
+              }
+              else {
+                $scope.gridOptionsDef.data = response.data;
+              }
+              if ($scope.gridOptionsDef.responseTotal) {
+                $scope.gridOptionsDef.totalItems = response.data[$scope.gridOptionsDef.responseTotal];
+              }
               setTableHeight(response.data.length);
               $scope.$emit("onData", response.data);
             }, function errorCallback(response) {
@@ -254,7 +268,7 @@ angular.module('ngFormioGrid', [
 
               names[label] = true;
 
-              var template = options.template || '<div class="ui-grid-cell-contents" formio-grid-cell></div>';
+              var template = options.template || '<formio-grid-cell class="ui-grid-cell-contents" data="COL_FIELD" component="col.colDef.component"></formio-grid-cell>';
               if (options.link) {
                 var linkClass = options.linkClass;
                 var linkEvent = options.linkEvent || ($scope.gridOptionsDef.namespace + 'View');
