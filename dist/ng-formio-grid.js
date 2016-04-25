@@ -116,6 +116,14 @@ angular.module('ngFormioGrid', [
               getPage();
             });
 
+            //Identifying if the first row of the grid loaded
+            var firstRow = true;
+            gridApi.core.on.rowsRendered($scope, function() {
+                if (gridApi.grid.renderContainers.body.visibleRowCache.length === 0) { return; }
+                $scope.$emit("onGridLoadDone");
+                firstRow = false;
+            });
+
             // When the row is selected, emit an event.
             gridApi.selection.on.rowSelectionChanged($scope, function(row){
               $scope.$emit($scope.gridOptionsDef.namespace + 'Select', row.entity, row.isSelected);
@@ -136,6 +144,12 @@ angular.module('ngFormioGrid', [
             });
           }
         }, $scope.gridOptions);
+        
+        // Make the passed row in parameter selected.
+        $scope.$on('selectGridRow', function (event, record) {
+          $scope.gridApi.selection.selectRow(record);
+        });
+        
         paginationOptions.pageSize = $scope.gridOptionsDef.paginationPageSize;
 
         $scope.buttons = $scope.buttons ||  [];
@@ -170,17 +184,22 @@ angular.module('ngFormioGrid', [
             }).then(function successCallback(response) {
               $scope.gridOptionsDef.data = response.data;
               setTableHeight(response.data.length);
+              $scope.$emit("onData", response.data);
             }, function errorCallback(response) {
               console.log('Error: ' + response.message);
             });
           }
           else {
+            $scope.gridOptionsDef.data = [];
             formio.loadSubmissions({params: $scope.query}).then(function(submissions) {
               $scope.gridOptionsDef.totalItems = submissions.serverCount;
               $scope.gridOptionsDef.data = submissions;
               setTableHeight(submissions.length);
+              $scope.$emit("onData", submissions);
+
             });
           }
+         
         };
 
         var setTableHeight = function(renderableRows) {
@@ -289,8 +308,8 @@ angular.module('ngFormioGrid', [
                 }
               });
             }
-
             getPage();
+
           });
         };
 
