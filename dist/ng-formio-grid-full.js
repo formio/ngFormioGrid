@@ -206,7 +206,7 @@ angular.module('ngFormioGrid', [
 
         var setTableHeight = function(renderableRows) {
           $timeout(function() {
-            var newHeight = ($scope.gridApi.grid.getVisibleRowCount() * 30) + 60;
+            var newHeight = ($scope.gridApi.grid.getVisibleRowCount() * 27) + 85;
             angular.element($element).children().css('height', newHeight + 'px');
           }, 10);
           return renderableRows;
@@ -232,9 +232,16 @@ angular.module('ngFormioGrid', [
               });
             });
 
-            var addColumn = function(component) {
+            var addColumn = function(component, column) {
               // Ensure that the labels do not collide.
-              var label = component.label || component.key;
+              var label;
+              if (column && column.label) {
+                label = column.label;
+              }
+              else {
+                label = component.label || component.key;
+              }
+
               while (names.hasOwnProperty(label)) {
                 label = component.label + increment++;
               }
@@ -250,9 +257,18 @@ angular.module('ngFormioGrid', [
 
             if ($scope.columns && $scope.columns.length > 0) {
               var components = FormioUtils.flattenComponents(form.components);
+              var column;
               $scope.columns.forEach(function(key) {
+                // Pass in either column key or column def
+                if (typeof key === 'object') {
+                  column = key;
+                  key = column.key;
+                }
+                else {
+                  column = false;
+                }
                 if (components.hasOwnProperty(key)) {
-                  addColumn(components[key]);
+                  addColumn(components[key], column);
                 }
               });
             }
