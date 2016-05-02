@@ -112,6 +112,8 @@ angular.module('ngFormioGrid', [
           useExternalSorting: true,
           enableRowSelection: false,
           enableRowHeaderSelection: false,
+          enableFiltering: true,
+          useExternalFiltering: true,
           multiSelect: false,
           columnDefs: [],
           data: [],
@@ -121,6 +123,41 @@ angular.module('ngFormioGrid', [
               paginationOptions.pageNumber = newPage;
               paginationOptions.pageSize = pageSize;
               getPage();
+            });
+
+            var debounce = 0;
+            gridApi.core.on.filterChanged($scope, function() {
+              var grid = this.grid;
+              if (debounce) {
+                clearTimeout(debounce);
+              }
+              debounce = setTimeout(function() {
+                grid.columns.forEach(function(column) {
+                  if (
+                    !column.colDef ||
+                    !column.colDef.component ||
+                    !column.colDef.component.key
+                  ) {
+                    return;
+                  }
+                  var term = '';
+                  if (column.filters && column.filters.length > 0) {
+                    term = column.filters[0].term;
+                  }
+                  var filterField = column.colDef.filterField || ('data.' + column.colDef.component.key);
+                  if (term) {
+
+                    // Add the term to the query.
+                    $scope.query[filterField + '__regex'] = '/' + term + '/i';
+                  }
+                  else {
+
+                    // Remove this from the query.
+                    delete $scope.query[filterField + '__regex'];
+                  }
+                });
+                getPage();
+              }, 500);
             });
 
             //Identifying if the first row of the grid loaded
@@ -135,10 +172,6 @@ angular.module('ngFormioGrid', [
             gridApi.selection.on.rowSelectionChanged($scope, function(row){
               $scope.$emit($scope.gridOptionsDef.namespace + 'Select', row.entity, row.isSelected);
             });
-
-            var setSorting = function() {
-
-            };
 
             // Ui Grid External sort code.
             gridApi.core.on.sortChanged($scope,function(grid, sortColumns) {
@@ -170,6 +203,11 @@ angular.module('ngFormioGrid', [
         }
 
         var getPage = function() {
+          // Set the column definitions to the ones provided.
+          if ($scope.gridOptions.columnDefs) {
+            $scope.gridOptionsDef.columnDefs = $scope.gridOptions.columnDefs;
+          }
+
           //if (!$scope.gridOptionsDef.columnDefs.length) { return; }
           if (paginationOptions.pageSize) {
             $scope.query.limit = paginationOptions.pageSize;
@@ -191,6 +229,22 @@ angular.module('ngFormioGrid', [
             if ($scope.aggregate) {
               // Convert sort, limit and skip to aggregate functions.
               var query = angular.copy($scope.aggregate);
+              var matchQuery = {};
+
+              // Find all match queries.
+              angular.forEach($scope.query, function(value, key) {
+                if (key.indexOf('data.') === 0) {
+                  var regExValue = value.match(/\/([^\/]+)\//);
+                  regExValue = (regExValue && regExValue.length > 1) ? regExValue[1] : '';
+                  if (regExValue) {
+                    matchQuery[key.replace('__regex', '')] = {'$regex': regExValue, '$options': 'i'};
+                  }
+                }
+              });
+              if (Object.keys(matchQuery).length > 0) {
+                query.push({'$match': matchQuery});
+              }
+
               if ($scope.query.sort) {
                 var sort = { '$sort' : {}};
                 if ($scope.query.sort.charAt(0) === '-') {
@@ -215,6 +269,7 @@ angular.module('ngFormioGrid', [
             else {
               request.params = $scope.query;
             }
+
             $http.get(endpoint, request).then(function successCallback(response) {
               if ($scope.gridOptionsDef.responseData) {
                 $scope.gridOptionsDef.data = response.data[$scope.gridOptionsDef.responseData];
@@ -275,6 +330,7 @@ angular.module('ngFormioGrid', [
                 name: button.label,
                 field: button.key,
                 width: button.width,
+                enableFiltering: false,
                 cellTemplate: '<a class="' + btnClass + '" ng-click="grid.appScope.buttonClick(\'' + button.event + '\', row.entity)"><span class="' + button.icon + '" aria-hidden="true"></span>' + button.label + '</a>'
               });
             });
@@ -321,7 +377,9 @@ angular.module('ngFormioGrid', [
                 field: field,
                 cellTemplate: template,
                 form: form,
-                sort: options.sort
+                sort: options.sort,
+                filterField: options.filterField,
+                enableFiltering: !!options.enableFiltering
               };
 
               // Allow for other options.
