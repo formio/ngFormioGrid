@@ -60,7 +60,7 @@ angular.module('ngFormioGrid', [
         var paginationOptions = {
           pageNumber: 1,
           pageSize: 25,
-          sort: null
+          sort: $scope.query.sort || null
         };
 
         var gridColumns = {};
