@@ -207,12 +207,12 @@ angular.module('ngFormioGrid', [
             });
           }
         }, $scope.gridOptions);
-        
+
         // Make the passed row in parameter selected.
         $scope.$on('selectGridRow', function (event, record) {
           $scope.gridApi.selection.selectRow(record);
         });
-        
+
         paginationOptions.pageSize = $scope.gridOptionsDef.paginationPageSize;
 
         $scope.buttons = $scope.buttons ||  [];
@@ -227,7 +227,7 @@ angular.module('ngFormioGrid', [
 
         var getPage = function() {
           // Set the column definitions to the ones provided.
-          if ($scope.gridOptions.columnDefs) {
+          if ($scope.gridOptions && $scope.gridOptions.columnDefs) {
             $scope.gridOptionsDef.columnDefs = $scope.gridOptions.columnDefs;
           }
 
@@ -238,7 +238,7 @@ angular.module('ngFormioGrid', [
           if (paginationOptions.pageNumber) {
             $scope.query.skip = (paginationOptions.pageNumber - 1) * paginationOptions.pageSize;
           }
-          
+
           $scope.query.sort = paginationOptions.sort;
 
           if ($scope.gridOptionsDef.endpoint) {
@@ -319,7 +319,7 @@ angular.module('ngFormioGrid', [
               $scope.$emit("onData", submissions);
             });
           }
-         
+
         };
 
         var setTableHeight = function(renderableRows) {
