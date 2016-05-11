@@ -65,6 +65,9 @@ angular.module('ngFormioGrid', [
           pageSize: 25,
           sort: null
         };
+        if ($scope.query && $scope.query.sort) {
+          paginationOptions.sort = $scope.query.sort;
+        }
 
         var gridColumns = {};
         var setupGridColumns = function() {
