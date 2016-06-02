@@ -183,6 +183,7 @@ angular.module('ngFormioGrid', [
               } else {
                 setSort(sortColumns[0].sort, sortColumns[0].colDef.field);
               }
+              gridApi.pagination.seek(1);
               getPage();
             });
           }
