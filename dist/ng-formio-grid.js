@@ -176,6 +176,11 @@ angular.module('ngFormioGrid', [
               $scope.$emit($scope.gridOptionsDef.namespace + 'Select', row.entity, row.isSelected);
             });
 
+            gridApi.selection.on.rowSelectionChangedBatch($scope, function(rows) {
+              var isSelected = rows.length ? rows[0].isSelected : false;
+              $scope.$emit($scope.gridOptionsDef.namespace + 'SelectAll', rows, isSelected);
+            });
+
             // Ui Grid External sort code.
             gridApi.core.on.sortChanged($scope,function(grid, sortColumns) {
               if (sortColumns.length === 0) {
@@ -191,15 +196,24 @@ angular.module('ngFormioGrid', [
 
         // Make the passed row in parameter selected.
         $scope.$on('selectGridRow', function (event, record) {
-          $scope.gridApi.selection.selectRow(record);
+          if (typeof record === 'string') {
+            angular.forEach($scope.gridOptionsDef.data, function(item) {
+              if (item._id.toString() === record) {
+                $scope.gridApi.selection.selectRow(item);
+              }
+            });
+          }
+          else {
+            $scope.gridApi.selection.selectRow(record);
+          }
         });
 
         paginationOptions.pageSize = $scope.gridOptionsDef.paginationPageSize;
 
         $scope.buttons = $scope.buttons ||  [];
 
-        $scope.buttonClick = function(event, entity) {
-          $scope.$emit(event, entity);
+        $scope.buttonClick = function(event, row) {
+          $scope.$emit(event, row.entity, row);
         };
 
         if (angular.isUndefined($scope.query)) {
@@ -335,7 +349,7 @@ angular.module('ngFormioGrid', [
                 field: button.key,
                 width: button.width,
                 enableFiltering: false,
-                cellTemplate: '<a class="' + btnClass + '" ng-click="grid.appScope.buttonClick(\'' + button.event + '\', row.entity)"><span class="' + button.icon + '" aria-hidden="true"></span>' + button.label + '</a>'
+                cellTemplate: '<a class="' + btnClass + '" ng-click="grid.appScope.buttonClick(\'' + button.event + '\', row)"><span class="' + button.icon + '" aria-hidden="true"></span>' + button.label + '</a>'
               });
             });
 
@@ -366,7 +380,7 @@ angular.module('ngFormioGrid', [
               if (options.link) {
                 var linkClass = options.linkClass;
                 var linkEvent = options.linkEvent || ($scope.gridOptionsDef.namespace + 'View');
-                template = '<a class="' + linkClass + '" style="cursor:pointer;" ng-click="grid.appScope.buttonClick(\'' + linkEvent + '\', row.entity)">' + template + '</a>';
+                template = '<a class="' + linkClass + '" style="cursor:pointer;" ng-click="grid.appScope.buttonClick(\'' + linkEvent + '\', row)">' + template + '</a>';
               }
 
               var field = options.field;
