@@ -118,6 +118,7 @@ angular.module('ngFormioGrid', [
           multiSelect: false,
           columnDefs: [],
           data: [],
+          initialLoad: true,
           onRegisterApi: function(gridApi) {
             $scope.gridApi = gridApi;
             gridApi.pagination.on.paginationChanged($scope, function(newPage, pageSize) {
@@ -134,18 +135,14 @@ angular.module('ngFormioGrid', [
               }
               debounce = setTimeout(function() {
                 grid.columns.forEach(function(column) {
-                  if (
-                    !column.colDef ||
-                    !column.colDef.component ||
-                    !column.colDef.component.key
-                  ) {
-                    return;
-                  }
                   var term = '';
                   if (column.filters && column.filters.length > 0) {
                     term = column.filters[0].term;
                   }
-                  var filterField = column.colDef.filterField || ('data.' + column.colDef.component.key);
+                  var filterField = column.colDef.filterField || column.colDef.field;
+                  if (!filterField) {
+                    return;
+                  }
                   if (term) {
 
                     // Add the term to the query.
@@ -191,20 +188,6 @@ angular.module('ngFormioGrid', [
           }
         }, $scope.gridOptions);
 
-        // Make the passed row in parameter selected.
-        $scope.$on('selectGridRow', function (event, record) {
-          if (typeof record === 'string') {
-            angular.forEach($scope.gridOptionsDef.data, function(item) {
-              if (item._id.toString() === record) {
-                $scope.gridApi.selection.selectRow(item);
-              }
-            });
-          }
-          else {
-            $scope.gridApi.selection.selectRow(record);
-          }
-        });
-
         paginationOptions.pageSize = $scope.gridOptionsDef.paginationPageSize;
 
         $scope.buttons = $scope.buttons ||  [];
@@ -217,7 +200,7 @@ angular.module('ngFormioGrid', [
           $scope.query = {};
         }
 
-        var getPage = function() {
+        var getPage = function(_query) {
           // Set the column definitions to the ones provided.
           if ($scope.gridOptions && $scope.gridOptions.columnDefs) {
             $scope.gridOptionsDef.columnDefs = $scope.gridOptions.columnDefs;
@@ -243,7 +226,7 @@ angular.module('ngFormioGrid', [
             // Support aggregation framework.
             if ($scope.aggregate) {
               // Convert sort, limit and skip to aggregate functions.
-              var query = angular.copy($scope.aggregate);
+              var query = _query ? _query : angular.copy($scope.aggregate);
               var matchQuery = {};
 
               // Find all match queries.
@@ -282,7 +265,7 @@ angular.module('ngFormioGrid', [
               request.headers['x-query'] = JSON.stringify(query);
             }
             else {
-              request.params = $scope.query;
+              request.params = _query ? _query : $scope.query;
             }
 
             $http.get(endpoint, request).then(function successCallback(response) {
@@ -297,6 +280,7 @@ angular.module('ngFormioGrid', [
               }
               setTableHeight(response.data.length);
               $scope.$emit("onData", response.data);
+              $scope.$emit('onData:' + $scope.gridOptionsDef.namespace, response.data);
             }, function errorCallback(response) {
               console.log('Error: ' + response.message);
             });
@@ -309,6 +293,7 @@ angular.module('ngFormioGrid', [
               $scope.gridOptionsDef.data = submissions;
               setTableHeight(submissions.length);
               $scope.$emit("onData", submissions);
+              $scope.$emit('onData:' + $scope.gridOptionsDef.namespace, submissions);
             });
           }
 
@@ -322,117 +307,145 @@ angular.module('ngFormioGrid', [
           return renderableRows;
         };
 
+        /**
+         * Setup the data grid for a form (if provided)
+         * @param form
+         */
+        var setupGrid = function(form) {
+
+          // Setup the grid columns again.
+          setupGridColumns();
+
+          var names = {};
+          var increment = 1;
+          $scope.gridOptionsDef.columnDefs = ($scope.gridOptions && $scope.gridOptions.columnDefs ? angular.copy($scope.gridOptions.columnDefs) : []);
+          $scope.buttons.forEach(function(button) {
+            var btnClass = button.class || 'btn btn-sm btn-default';
+            names[button.label] = true;
+            $scope.gridOptionsDef.columnDefs.unshift({
+              name: button.label,
+              field: button.key,
+              width: button.width,
+              enableFiltering: false,
+              cellTemplate: '<a class="' + btnClass + '" ng-click="grid.appScope.buttonClick(\'' + button.event + '\', row)"><span class="' + button.icon + '" aria-hidden="true"></span>' + button.label + '</a>'
+            });
+          });
+
+          var columnIndex = 0;
+          var addColumn = function(component, options, key) {
+            options = options || {};
+
+            // Default the first column to be a link unless they say otherwise.
+            if (columnIndex === 0 && !options.hasOwnProperty('link')) {
+              options.link = true;
+            }
+
+            // Ensure that the labels do not collide.
+            var label = '';
+            if (options.hasOwnProperty('label')) {
+              label = options.label;
+            }
+            else if (component) {
+              label = component.label || component.key;
+              while (names.hasOwnProperty(label)) {
+                label = component.label + increment++;
+              }
+            }
+
+            names[label] = true;
+
+            var template = options.template || '<formio-grid-cell class="ui-grid-cell-contents" data="COL_FIELD" component="col.colDef.component"></formio-grid-cell>';
+            if (options.link) {
+              var linkClass = options.linkClass;
+              var linkEvent = options.linkEvent || ($scope.gridOptionsDef.namespace + 'View');
+              template = '<a class="' + linkClass + '" style="cursor:pointer;" ng-click="grid.appScope.buttonClick(\'' + linkEvent + '\', row)">' + template + '</a>';
+            }
+
+            var field = options.field;
+            if (!options.field) {
+              field = component ? ($scope.gridOptionsDef.dataRoot + component.key) : key;
+            }
+
+            // Setup the column.
+            var column = {
+              component: component,
+              name: label,
+              field: field,
+              cellTemplate: template,
+              form: form,
+              sort: options.sort,
+              filterField: options.filterField,
+              enableFiltering: !!options.enableFiltering
+            };
+
+            // Allow for other options.
+            ['width', 'sortable', 'visible', 'minWidth', 'maxWidth', 'resizable', 'cellClass', 'headerCellClass', 'headerCellTemplate'].forEach(function(option) {
+              if (options.hasOwnProperty(option)) {
+                column[option] = options[option];
+              }
+            });
+
+            // Add the column to the grid.
+            $scope.gridOptionsDef.columnDefs.push(column);
+            columnIndex++;
+          };
+
+          if (gridColumns && (Object.keys(gridColumns).length > 0)) {
+            var components = form ? FormioUtils.flattenComponents(form.components) : {};
+            angular.forEach(gridColumns, function(options, key) {
+              if (options.sort && options.sort.direction) {
+                var field = components.hasOwnProperty(key) ? 'data.' + key : key;
+                setSort(options.sort, field);
+              }
+
+              addColumn(components[key], options, key);
+            });
+          }
+          else if (form) {
+            FormioUtils.eachComponent(form.components, function(component) {
+              if (component.input && component.tableView && component.key) {
+                addColumn(component);
+              }
+            });
+          }
+
+          // Only get the page if the initialLoad variable is true.
+          if ($scope.gridOptionsDef.initialLoad) {
+            getPage();
+          }
+
+          // Always make sure that next loads pass through.
+          $scope.gridOptionsDef.initialLoad = true;
+        };
+
         // Load a new grid view.
         var loadGrid = function() {
           // If no source, things should be set up manually.
           if (!$scope.src) {
-            getPage();
+            setupGrid();
             return;
           }
           formio = new Formio($scope.src);
-          formio.loadForm().then(function(form) {
-
-            // Setup the grid columns again.
-            setupGridColumns();
-
-            var names = {};
-            var increment = 1;
-            $scope.gridOptionsDef.columnDefs = ($scope.gridOptions && $scope.gridOptions.columnDefs ? angular.copy($scope.gridOptions.columnDefs) : []);
-            $scope.buttons.forEach(function(button) {
-              var btnClass = button.class || 'btn btn-sm btn-default';
-              names[button.label] = true;
-              $scope.gridOptionsDef.columnDefs.unshift({
-                name: button.label,
-                field: button.key,
-                width: button.width,
-                enableFiltering: false,
-                cellTemplate: '<a class="' + btnClass + '" ng-click="grid.appScope.buttonClick(\'' + button.event + '\', row)"><span class="' + button.icon + '" aria-hidden="true"></span>' + button.label + '</a>'
-              });
-            });
-
-            var columnIndex = 0;
-            var addColumn = function(component, options, key) {
-              options = options || {};
-
-              // Default the first column to be a link unless they say otherwise.
-              if (columnIndex === 0 && !options.hasOwnProperty('link')) {
-                options.link = true;
-              }
-
-              // Ensure that the labels do not collide.
-              var label = '';
-              if (options.hasOwnProperty('label')) {
-                label = options.label;
-              }
-              else if (component) {
-                label = component.label || component.key;
-                while (names.hasOwnProperty(label)) {
-                  label = component.label + increment++;
-                }
-              }
-
-              names[label] = true;
-
-              var template = options.template || '<formio-grid-cell class="ui-grid-cell-contents" data="COL_FIELD" component="col.colDef.component"></formio-grid-cell>';
-              if (options.link) {
-                var linkClass = options.linkClass;
-                var linkEvent = options.linkEvent || ($scope.gridOptionsDef.namespace + 'View');
-                template = '<a class="' + linkClass + '" style="cursor:pointer;" ng-click="grid.appScope.buttonClick(\'' + linkEvent + '\', row)">' + template + '</a>';
-              }
-
-              var field = options.field;
-              if (!options.field) {
-                field = component ? ($scope.gridOptionsDef.dataRoot + component.key) : key;
-              }
-
-              // Setup the column.
-              var column = {
-                component: component,
-                name: label,
-                field: field,
-                cellTemplate: template,
-                form: form,
-                sort: options.sort,
-                filterField: options.filterField,
-                enableFiltering: !!options.enableFiltering
-              };
-
-              // Allow for other options.
-              ['width', 'sortable', 'visible', 'minWidth', 'maxWidth', 'resizable', 'cellClass', 'headerCellClass', 'headerCellTemplate'].forEach(function(option) {
-                if (options.hasOwnProperty(option)) {
-                  column[option] = options[option];
-                }
-              });
-
-              // Add the column to the grid.
-              $scope.gridOptionsDef.columnDefs.push(column);
-              columnIndex++;
-            };
-
-            if (gridColumns && (Object.keys(gridColumns).length > 0)) {
-              var components = FormioUtils.flattenComponents(form.components);
-              angular.forEach(gridColumns, function(options, key) {
-                if (options.sort && options.sort.direction) {
-                  var field = components.hasOwnProperty(key) ? 'data.' + key : key;
-                  setSort(options.sort, field);
-                }
-
-                addColumn(components[key], options, key);
-              });
-            }
-            else {
-              FormioUtils.eachComponent(form.components, function(component) {
-                if (component.input && component.tableView && component.key) {
-                  addColumn(component);
-                }
-              });
-            }
-            getPage();
-
-          });
+          formio.loadForm().then(setupGrid);
         };
 
-        $scope.$on('reloadGrid', function(event, src, query) {
+        var selectRow = function(record) {
+          if (typeof record === 'string') {
+            angular.forEach($scope.gridOptionsDef.data, function(item) {
+              if (item._id.toString() === record) {
+                $scope.gridApi.selection.selectRow(item);
+              }
+            });
+          }
+          else {
+            $scope.gridApi.selection.selectRow(record);
+          }
+        };
+
+        var refreshGrid = function(query) {
+          getPage(query);
+        };
+        var reloadGrid = function(src, query) {
           if (src) {
             $scope.src = src;
           }
@@ -440,6 +453,30 @@ angular.module('ngFormioGrid', [
             $scope.query = query;
           }
           loadGrid();
+        };
+
+        $scope.$on('selectGridRow:' + $scope.gridOptionsDef.namespace, function (event, record) {
+          selectRow(record);
+        });
+
+        $scope.$on('selectGridRow', function (event, record) {
+          selectRow(record);
+        });
+
+        $scope.$on('reloadGrid:' + $scope.gridOptionsDef.namespace, function(event, src, query) {
+          reloadGrid(src, query);
+        });
+
+        $scope.$on('reloadGrid', function(event, src, query) {
+          reloadGrid(src, query);
+        });
+
+        $scope.$on('refreshGrid:' + $scope.gridOptionsDef.namespace, function(event, query) {
+          refreshGrid(query);
+        });
+
+        $scope.$on('refreshGrid', function(event, query) {
+          refreshGrid(query);
         });
 
         loadGrid();
