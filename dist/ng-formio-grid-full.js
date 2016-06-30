@@ -121,6 +121,16 @@ angular.module('ngFormioGrid', [
           }
         };
 
+        var setLoading = function(loading) {
+          if (loading) {
+            var loader = '<i style="font-size:2em;position:absolute;z-index:200;left: 50%;top:50%;margin-left:-1em;margin-top:-1em;" class="ui-grid-loader glyphicon glyphicon-refresh glyphicon-spin"></i>';
+            angular.element('.ui-grid-contents-wrapper', $element).prepend(loader);
+          }
+          else {
+            angular.element('.ui-grid-contents-wrapper .ui-grid-loader', $element).remove();
+          }
+        };
+
         $scope.gridOptionsDef = angular.merge({
           namespace: 'row',
           dataRoot: 'data.',
@@ -147,6 +157,11 @@ angular.module('ngFormioGrid', [
               paginationOptions.pageNumber = newPage;
               paginationOptions.pageSize = pageSize;
               getPage();
+            });
+
+            // Say we are now loading.
+            gridApi.core.on.renderingComplete($scope, function() {
+              setLoading(true);
             });
 
             var debounce = 0;
@@ -302,6 +317,7 @@ angular.module('ngFormioGrid', [
                 $scope.gridOptionsDef.totalItems = response.data[$scope.gridOptionsDef.responseTotal];
               }
               setTableHeight(response.data.length);
+              setLoading(false);
               $scope.$emit("onData", response.data);
               $scope.$emit('onData:' + $scope.gridOptionsDef.namespace, response.data);
             }, function errorCallback(response) {
@@ -315,6 +331,7 @@ angular.module('ngFormioGrid', [
               $scope.gridOptionsDef.totalItems = submissions.serverCount;
               $scope.gridOptionsDef.data = submissions;
               setTableHeight(submissions.length);
+              setLoading(false);
               $scope.$emit("onData", submissions);
               $scope.$emit('onData:' + $scope.gridOptionsDef.namespace, submissions);
             });
@@ -466,6 +483,7 @@ angular.module('ngFormioGrid', [
         };
 
         var refreshGrid = function(query) {
+          setLoading(true);
           getPage(query);
         };
         var reloadGrid = function(src, query) {
@@ -475,6 +493,7 @@ angular.module('ngFormioGrid', [
           if (query) {
             $scope.query = query;
           }
+          setLoading(true);
           loadGrid();
         };
 
