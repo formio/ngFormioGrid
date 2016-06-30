@@ -463,6 +463,7 @@ angular.module('ngFormioGrid', [
         };
 
         var refreshGrid = function(query) {
+          setLoading(true);
           getPage(query);
         };
         var reloadGrid = function(src, query) {
@@ -472,6 +473,7 @@ angular.module('ngFormioGrid', [
           if (query) {
             $scope.query = query;
           }
+          setLoading(true);
           loadGrid();
         };
 
