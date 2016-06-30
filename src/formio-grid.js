@@ -100,12 +100,13 @@ angular.module('ngFormioGrid', [
         };
 
         var setLoading = function(loading) {
-          if (loading) {
+          var loaderElement = angular.element('.ui-grid-contents-wrapper .ui-grid-loader', $element);
+          if (loading && (loaderElement.length == 0)) {
             var loader = '<i style="font-size:2em;position:absolute;z-index:200;left: 50%;top:50%;margin-left:-1em;margin-top:-1em;" class="ui-grid-loader glyphicon glyphicon-refresh glyphicon-spin"></i>';
             angular.element('.ui-grid-contents-wrapper', $element).prepend(loader);
           }
-          else {
-            angular.element('.ui-grid-contents-wrapper .ui-grid-loader', $element).remove();
+          else if (loaderElement.length) {
+            loaderElement.remove();
           }
         };
 
