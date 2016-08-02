@@ -155,19 +155,24 @@ angular.module('ngFormioGrid', [
                   if (column.filters && column.filters.length > 0) {
                     term = column.filters[0].term;
                   }
-                  var filterField = column.colDef.filterField || column.colDef.field;
-                  if (!filterField) {
+                  var filter = column.colDef.filterField || column.colDef.filter || column.colDef.field;
+                  if (!filter) {
                     return;
                   }
-                  if (term) {
-
-                    // Add the term to the query.
-                    $scope.query[filterField + '__regex'] = '/' + term + '/i';
+                  if (typeof filter === 'function') {
+                    filter($scope.query, term);
                   }
                   else {
+                    if (term) {
 
-                    // Remove this from the query.
-                    delete $scope.query[filterField + '__regex'];
+                      // Add the term to the query.
+                      $scope.query[filter + '__regex'] = '/' + term + '/i';
+                    }
+                    else {
+
+                      // Remove this from the query.
+                      delete $scope.query[filter + '__regex'];
+                    }
                   }
                 });
                 getPage();
@@ -249,10 +254,15 @@ angular.module('ngFormioGrid', [
               // Find all match queries.
               angular.forEach($scope.query, function(value, key) {
                 if (key.indexOf('data.') === 0) {
-                  var regExValue = value.match(/\/([^\/]+)\//);
-                  regExValue = (regExValue && regExValue.length > 1) ? regExValue[1] : '';
-                  if (regExValue) {
-                    matchQuery[key.replace('__regex', '')] = {'$regex': regExValue, '$options': 'i'};
+                  if (key.indexOf('__regex') !== -1) {
+                    var regExValue = value.match(/\/([^\/]+)\//);
+                    regExValue = (regExValue && regExValue.length > 1) ? regExValue[1] : '';
+                    if (regExValue) {
+                      matchQuery[key.replace('__regex', '')] = {'$regex': regExValue, '$options': 'i'};
+                    }
+                  }
+                  else {
+                    matchQuery[key] = value;
                   }
                 }
               });
@@ -286,11 +296,18 @@ angular.module('ngFormioGrid', [
             }
 
             $http.get(endpoint, request).then(function successCallback(response) {
+              var range = response.headers('Content-Range');
+              if (range) {
+                range = range.split('/');
+                if ((range.length > 1) && (range[1] != '*')) {
+                  $scope.gridOptionsDef.totalItems = Number(range[1]);
+                }
+              }
               if ($scope.gridOptionsDef.responseData) {
                 $scope.gridOptionsDef.data = response.data[$scope.gridOptionsDef.responseData];
               }
               else {
-                $scope.gridOptionsDef.data = response.data;
+                $scope.gridOptionsDef.data = response.data ? response.data : [];
               }
               if ($scope.gridOptionsDef.responseTotal) {
                 $scope.gridOptionsDef.totalItems = response.data[$scope.gridOptionsDef.responseTotal];
@@ -392,13 +409,11 @@ angular.module('ngFormioGrid', [
               field: field,
               cellTemplate: template,
               form: form,
-              sort: options.sort,
-              filterField: options.filterField,
               enableFiltering: !!options.enableFiltering
             };
 
             // Allow for other options.
-            ['width', 'sortable', 'visible', 'minWidth', 'maxWidth', 'resizable', 'cellClass', 'headerCellClass', 'headerCellTemplate'].forEach(function(option) {
+            ['sort', 'filterField', 'filter', 'width', 'sortable', 'visible', 'minWidth', 'maxWidth', 'resizable', 'cellClass', 'headerCellClass', 'headerCellTemplate'].forEach(function(option) {
               if (options.hasOwnProperty(option)) {
                 column[option] = options[option];
               }
@@ -435,6 +450,8 @@ angular.module('ngFormioGrid', [
 
           // Always make sure that next loads pass through.
           $scope.gridOptionsDef.initialLoad = true;
+          $scope.$emit('onGridReady');
+          $scope.$emit('onGridReady:' + $scope.gridOptionsDef.namespace);
         };
 
         // Load a new grid view.
