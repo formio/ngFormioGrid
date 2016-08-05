@@ -297,6 +297,8 @@ angular.module('ngFormioGrid', [
               request.params = _query ? _query : $scope.query;
             }
 
+            $scope.$emit("onRequest", query || request.params);
+            $scope.$emit('onRequest:' + $scope.gridOptionsDef.namespace, query || request.params);
             $http.get(endpoint, request).then(function successCallback(response) {
               var range = response.headers('Content-Range');
               if (range) {
@@ -325,6 +327,8 @@ angular.module('ngFormioGrid', [
           else {
             if (!formio) { return; }
             $scope.gridOptionsDef.data = [];
+            $scope.$emit("onRequest", $scope.query);
+            $scope.$emit('onRequest:' + $scope.gridOptionsDef.namespace, $scope.query);
             formio.loadSubmissions({params: $scope.query}).then(function(submissions) {
               $scope.gridOptionsDef.totalItems = submissions.serverCount;
               $scope.gridOptionsDef.data = submissions;
