@@ -7,7 +7,9 @@ angular.module('ngFormioGrid', [
   'ui.grid.pagination',
   'ui.grid.resizeColumns',
   'ui.grid.autoResize',
-  'ui.grid.selection'
+  'ui.grid.selection',
+  'ui.grid.edit',
+  'ui.grid.cellNav'
 ])
 .directive('formioGridCell', ['$compile', 'formioTableView', function ($compile, formioTableView) {
   return {
@@ -39,7 +41,7 @@ angular.module('ngFormioGrid', [
       buttons: '=?',
       gridOptions: '=?'
     },
-    template: '<div><div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns ui-grid-selection class="grid"></div></div>',
+    template: '<div><div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns ui-grid-selection ui-grid-edit ui-grid-cellnav class="grid"></div></div>',
     controller: [
       '$scope',
       '$element',
@@ -199,6 +201,11 @@ angular.module('ngFormioGrid', [
               $scope.$emit($scope.gridOptionsDef.namespace + 'SelectAll', rows, isSelected);
             });
 
+            gridApi.edit.on.afterCellEdit($scope,function(rowEntity, colDef, newValue, oldValue){
+              $scope.$emit($scope.gridOptionsDef.namespace + 'CellEdit', rowEntity, colDef, newValue, oldValue);
+              $scope.$apply();
+            });
+
             // Ui Grid External sort code.
             gridApi.core.on.sortChanged($scope,function(grid, sortColumns) {
               if (sortColumns.length === 0) {
@@ -300,6 +307,9 @@ angular.module('ngFormioGrid', [
             $scope.$emit("onRequest", query || request.params);
             $scope.$emit('onRequest:' + $scope.gridOptionsDef.namespace, query || request.params);
             $http.get(endpoint, request).then(function successCallback(response) {
+              if (!response.data) {
+                response.data = [];
+              }
               var range = response.headers('Content-Range');
               if (range) {
                 range = range.split('/');
@@ -521,6 +531,10 @@ angular.module('ngFormioGrid', [
 
         $scope.$on('refreshGrid', function(event, query) {
           refreshGrid(query);
+        });
+
+        $scope.$on('adjustHeight', function(event, numRows) {
+          setTableHeight(numRows);
         });
 
         loadGrid();
