@@ -29,7 +29,7 @@ angular.module('ngFormioGrid', [
     }
   };
 }])
-.directive('formioGrid', function() {
+.directive('formioGrid', ['$compile', function($compile) {
   return {
     restrict: 'E',
     replace: true,
@@ -41,7 +41,20 @@ angular.module('ngFormioGrid', [
       buttons: '=?',
       gridOptions: '=?'
     },
-    template: '<div><div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns ui-grid-selection ui-grid-edit ui-grid-cellnav class="grid"></div></div>',
+    link: function(scope, element, attrs) {
+      var template = '<div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns class="grid"></div>';
+      if (scope.gridOptions) {
+        if (scope.gridOptions.enableCellEdit) {
+          template = '<div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns ui-grid-edit ui-grid-cellNav class="grid"></div>';
+        }
+        else if (scope.gridOptions.enableRowSelection) {
+          template = '<div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns ui-grid-selection class="grid"></div>';
+        }
+      }
+      element.html(template).show();
+      $compile(element.contents())(scope);
+    },
+    template: '<div></div>',
     controller: [
       '$scope',
       '$element',
@@ -126,6 +139,8 @@ angular.module('ngFormioGrid', [
           enableVerticalScrollbar: uiGridConstants.scrollbars.NEVER,
           useExternalPagination: true,
           useExternalSorting: true,
+          enableCellEdit: false,
+          enableCellEditOnFocus: false,
           enableRowSelection: false,
           enableRowHeaderSelection: false,
           enableFiltering: true,
@@ -191,20 +206,24 @@ angular.module('ngFormioGrid', [
                 firstRow = false;
             });
 
-            // When the row is selected, emit an event.
-            gridApi.selection.on.rowSelectionChanged($scope, function(row){
-              $scope.$emit($scope.gridOptionsDef.namespace + 'Select', row.entity, row.isSelected);
-            });
+            if (gridApi.selection) {
+              // When the row is selected, emit an event.
+              gridApi.selection.on.rowSelectionChanged($scope, function(row){
+                $scope.$emit($scope.gridOptionsDef.namespace + 'Select', row.entity, row.isSelected);
+              });
 
-            gridApi.selection.on.rowSelectionChangedBatch($scope, function(rows) {
-              var isSelected = rows.length ? rows[0].isSelected : false;
-              $scope.$emit($scope.gridOptionsDef.namespace + 'SelectAll', rows, isSelected);
-            });
+              gridApi.selection.on.rowSelectionChangedBatch($scope, function(rows) {
+                var isSelected = rows.length ? rows[0].isSelected : false;
+                $scope.$emit($scope.gridOptionsDef.namespace + 'SelectAll', rows, isSelected);
+              });
+            }
 
-            gridApi.edit.on.afterCellEdit($scope,function(rowEntity, colDef, newValue, oldValue){
-              $scope.$emit($scope.gridOptionsDef.namespace + 'CellEdit', rowEntity, colDef, newValue, oldValue);
-              $scope.$apply();
-            });
+            if (gridApi.edit) {
+              gridApi.edit.on.afterCellEdit($scope,function(rowEntity, colDef, newValue, oldValue){
+                $scope.$emit($scope.gridOptionsDef.namespace + 'CellEdit', rowEntity, colDef, newValue, oldValue);
+                $scope.$apply();
+              });
+            }
 
             // Ui Grid External sort code.
             gridApi.core.on.sortChanged($scope,function(grid, sortColumns) {
@@ -425,6 +444,7 @@ angular.module('ngFormioGrid', [
               field: field,
               cellTemplate: template,
               form: form,
+              enableCellEdit: !!options.enableCellEdit,
               enableFiltering: !!options.enableFiltering
             };
 
@@ -445,7 +465,7 @@ angular.module('ngFormioGrid', [
             angular.forEach(gridColumns, function(options, key) {
               if (options.sort && options.sort.direction) {
                 var field = components.hasOwnProperty(key) ? 'data.' + key : key;
-                setSort(options.sort, field);
+                setSort(options.sort, options.field || field);
               }
 
               addColumn(components[key], options, key);
@@ -482,6 +502,9 @@ angular.module('ngFormioGrid', [
         };
 
         var selectRow = function(record) {
+          if (!$scope.gridOptionsDef.enableRowSelection) {
+            return;
+          }
           if (typeof record === 'string') {
             angular.forEach($scope.gridOptionsDef.data, function(item) {
               if (item._id.toString() === record) {
@@ -529,6 +552,10 @@ angular.module('ngFormioGrid', [
           refreshGrid(query);
         });
 
+        $scope.$on('setLoading', function(event, loading) {
+          setLoading(loading);
+        });
+
         $scope.$on('refreshGrid', function(event, query) {
           refreshGrid(query);
         });
@@ -541,6 +568,6 @@ angular.module('ngFormioGrid', [
       }
     ]
   };
-});
+}]);
 
 },{}]},{},[1]);
