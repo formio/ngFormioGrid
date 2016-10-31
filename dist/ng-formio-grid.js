@@ -519,6 +519,9 @@ angular.module('ngFormioGrid', [
 
         var refreshGrid = function(query) {
           setLoading(true);
+          if (query) {
+            $scope.query = query;
+          }
           getPage(query);
         };
         var reloadGrid = function(src, query) {
