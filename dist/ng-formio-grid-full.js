@@ -475,6 +475,11 @@ angular.module('ngFormioGrid', [
               }
             });
 
+            // Ensure they have a filter field if filtering is enabled.
+            if (options.enableFiltering && !column.filter) {
+              column.filter = column.field;
+            }
+
             // Add the column to the grid.
             $scope.gridOptionsDef.columnDefs.push(column);
             columnIndex++;
