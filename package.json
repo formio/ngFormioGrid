@@ -31,7 +31,7 @@
   "dependencies": {
     "angular": "^1.6.0",
     "angular-sanitize": "^1.6.0",
-    "angular-ui-grid": "^4.0.0",
+    "angular-ui-grid": "^4.0.1",
     "ng-formio": "^2.5.2"
   },
   "browserify": {
