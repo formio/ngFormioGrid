@@ -141,6 +141,7 @@ angular.module('ngFormioGrid', [
           enableFiltering: true,
           useExternalFiltering: true,
           multiSelect: false,
+          loadOptions: null,
           columnDefs: [],
           data: [],
           initialLoad: true,
@@ -353,7 +354,7 @@ angular.module('ngFormioGrid', [
             $scope.gridOptionsDef.data = [];
             $scope.$emit("onRequest", $scope.query);
             $scope.$emit('onRequest:' + $scope.gridOptionsDef.namespace, $scope.query);
-            formio.loadSubmissions({params: $scope.query}).then(function(submissions) {
+            formio.loadSubmissions({params: $scope.query}, $scope.gridOptionsDef.loadOptions).then(function(submissions) {
               $scope.gridOptionsDef.totalItems = submissions.serverCount;
               $scope.gridOptionsDef.data = submissions;
               setTableHeight(submissions.length);
