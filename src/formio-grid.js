@@ -40,13 +40,10 @@ angular.module('ngFormioGrid', [
       gridOptions: '=?'
     },
     link: function(scope, element, attrs) {
-      var template = '<div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns class="grid"></div>';
+      var template = '<div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns ui-grid-selection class="grid"></div>';
       if (scope.gridOptions) {
         if (scope.gridOptions.enableCellEdit) {
           template = '<div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns ui-grid-edit ui-grid-cellNav class="grid"></div>';
-        }
-        else if (scope.gridOptions.enableRowSelection) {
-          template = '<div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns ui-grid-selection class="grid"></div>';
         }
       }
       element.html(template).show();
@@ -139,7 +136,7 @@ angular.module('ngFormioGrid', [
           useExternalSorting: true,
           enableCellEdit: false,
           enableCellEditOnFocus: false,
-          enableRowSelection: false,
+          enableRowSelection: true,
           enableRowHeaderSelection: false,
           enableFiltering: true,
           useExternalFiltering: true,
