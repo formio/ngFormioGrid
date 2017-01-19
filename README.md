@@ -36,10 +36,6 @@ angular.module('yourApp', [
 ])
 ```
 
-Documentation
-===================
-To view detailed documentation, go to https://github.com/formio/ngFormioGrid/wiki
-
 Usage
 ====================
 Now that you have the library installed, you can then do the following to add a form to your application.
@@ -51,6 +47,10 @@ Now that you have the library installed, you can then do the following to add a 
   - You can then embed the data grid within your application using the following snippit of code.
   
   ```<formio-grid src="'https://myapp.form.io/myform'"></formio-grid>```
+
+Full Documentation
+===================
+To view detailed documentation, go to https://github.com/formio/ngFormioGrid/wiki
 
 Enjoy!
 
