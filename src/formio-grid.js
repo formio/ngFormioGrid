@@ -190,6 +190,7 @@ angular.module('ngFormioGrid', [
                     }
                   }
                 });
+                gridApi.pagination.seek(1);
                 getPage();
               }, 500);
             });
