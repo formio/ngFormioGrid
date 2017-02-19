@@ -1,6 +1,6 @@
 {
   "name": "ng-formio-grid",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "authors": [
     "Travis Tidwell <travis@form.io>"
   ],
@@ -15,7 +15,7 @@
     "angular": "^1.6.2",
     "angular-sanitize": "^1.6.2",
     "angular-ui-grid": "^4.0.2",
-    "ng-formio": "^2.9.10"
+    "ng-formio": "^2.10.2"
   },
   "license": "MIT",
   "ignore": [
