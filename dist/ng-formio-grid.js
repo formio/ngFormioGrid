@@ -61,6 +61,7 @@ angular.module('ngFormioGrid', [
       'FormioUtils',
       'uiGridConstants',
       '$http',
+      '$q',
       function(
         $scope,
         $element,
@@ -69,8 +70,11 @@ angular.module('ngFormioGrid', [
         formioComponents,
         FormioUtils,
         uiGridConstants,
-        $http
+        $http,
+        $q
       ) {
+        var ready = $q.defer();
+        var loadReady = ready.promise;
         var formio = null;
         var paginationOptions = {
           pageNumber: 1,
@@ -250,123 +254,124 @@ angular.module('ngFormioGrid', [
         }
 
         var getPage = function(_query) {
-          // Set the column definitions to the ones provided.
-          if ($scope.gridOptions && $scope.gridOptions.columnDefs) {
-            $scope.gridOptionsDef.columnDefs = $scope.gridOptions.columnDefs;
-          }
+          loadReady.then(function() {
+            // Set the column definitions to the ones provided.
+            if ($scope.gridOptions && $scope.gridOptions.columnDefs) {
+              $scope.gridOptionsDef.columnDefs = $scope.gridOptions.columnDefs;
+            }
 
-          //if (!$scope.gridOptionsDef.columnDefs.length) { return; }
-          if (paginationOptions.pageSize) {
-            $scope.query.limit = paginationOptions.pageSize;
-          }
-          if (paginationOptions.pageNumber) {
-            $scope.query.skip = (paginationOptions.pageNumber - 1) * paginationOptions.pageSize;
-          }
+            //if (!$scope.gridOptionsDef.columnDefs.length) { return; }
+            if (paginationOptions.pageSize) {
+              $scope.query.limit = paginationOptions.pageSize;
+            }
+            if (paginationOptions.pageNumber) {
+              $scope.query.skip = (paginationOptions.pageNumber - 1) * paginationOptions.pageSize;
+            }
 
-          $scope.query.sort = paginationOptions.sort;
+            $scope.query.sort = paginationOptions.sort;
 
-          if ($scope.gridOptionsDef.endpoint) {
-            var endpoint = $scope.gridOptionsDef.endpoint;
-            var request = {
-              headers: {
-                'x-jwt-token': Formio.getToken()
-              }
-            };
-            // Support aggregation framework.
-            if ($scope.aggregate) {
-              // Convert sort, limit and skip to aggregate functions.
-              var query = _query ? _query : angular.copy($scope.aggregate);
-              var matchQuery = {};
+            if ($scope.gridOptionsDef.endpoint) {
+              var endpoint = $scope.gridOptionsDef.endpoint;
+              var request = {
+                headers: {
+                  'x-jwt-token': Formio.getToken()
+                }
+              };
+              // Support aggregation framework.
+              if ($scope.aggregate) {
+                // Convert sort, limit and skip to aggregate functions.
+                var query = _query ? _query : angular.copy($scope.aggregate);
+                var matchQuery = {};
 
-              // Find all match queries.
-              angular.forEach($scope.query, function(value, key) {
-                if (key.indexOf('data.') === 0) {
-                  if (key.indexOf('__regex') !== -1) {
-                    var regExValue = value.match(/\/([^\/]+)\//);
-                    regExValue = (regExValue && regExValue.length > 1) ? regExValue[1] : '';
-                    if (regExValue) {
-                      matchQuery[key.replace('__regex', '')] = {'$regex': regExValue, '$options': 'i'};
+                // Find all match queries.
+                angular.forEach($scope.query, function(value, key) {
+                  if (key.indexOf('data.') === 0) {
+                    if (key.indexOf('__regex') !== -1) {
+                      var regExValue = value.match(/\/([^\/]+)\//);
+                      regExValue = (regExValue && regExValue.length > 1) ? regExValue[1] : '';
+                      if (regExValue) {
+                        matchQuery[key.replace('__regex', '')] = {'$regex': regExValue, '$options': 'i'};
+                      }
+                    }
+                    else {
+                      matchQuery[key] = value;
                     }
                   }
+                });
+                if (Object.keys(matchQuery).length > 0) {
+                  query.push({'$match': matchQuery});
+                }
+
+                if ($scope.query.sort) {
+                  var sort = { '$sort' : {}};
+                  if ($scope.query.sort.charAt(0) === '-') {
+                    var field = $scope.query.sort.slice(1);
+                    sort['$sort'][field] = -1;
+                    query.push(sort);
+                  }
                   else {
-                    matchQuery[key] = value;
+                    sort['$sort'][$scope.query.sort] = 1;
+                    query.push(sort);
                   }
                 }
-              });
-              if (Object.keys(matchQuery).length > 0) {
-                query.push({'$match': matchQuery});
-              }
-
-              if ($scope.query.sort) {
-                var sort = { '$sort' : {}};
-                if ($scope.query.sort.charAt(0) === '-') {
-                  var field = $scope.query.sort.slice(1);
-                  sort['$sort'][field] = -1;
-                  query.push(sort);
+                if ($scope.query.limit) {
+                  query.push({ '$limit' : $scope.query.limit });
                 }
-                else {
-                  sort['$sort'][$scope.query.sort] = 1;
-                  query.push(sort);
+                if ($scope.query.skip) {
+                  query.push({ '$skip' : $scope.query.skip });
                 }
-              }
-              if ($scope.query.limit) {
-                query.push({ '$limit' : $scope.query.limit });
-              }
-              if ($scope.query.skip) {
-                query.push({ '$skip' : $scope.query.skip });
-              }
 
-              request.headers['x-query'] = JSON.stringify(query);
-            }
-            else {
-              request.params = _query ? _query : $scope.query;
-            }
-
-            $scope.$emit("onRequest", query || request.params);
-            $scope.$emit('onRequest:' + $scope.gridOptionsDef.namespace, query || request.params);
-            $http.get(endpoint, request).then(function successCallback(response) {
-              if (!response.data) {
-                response.data = [];
-              }
-              var range = response.headers('Content-Range');
-              if (range) {
-                range = range.split('/');
-                if ((range.length > 1) && (range[1] != '*')) {
-                  $scope.gridOptionsDef.totalItems = Number(range[1]);
-                }
-              }
-              if ($scope.gridOptionsDef.responseData) {
-                $scope.gridOptionsDef.data = response.data[$scope.gridOptionsDef.responseData];
+                request.headers['x-query'] = JSON.stringify(query);
               }
               else {
-                $scope.gridOptionsDef.data = response.data ? response.data : [];
+                request.params = _query ? _query : $scope.query;
               }
-              if ($scope.gridOptionsDef.responseTotal) {
-                $scope.gridOptionsDef.totalItems = response.data[$scope.gridOptionsDef.responseTotal];
-              }
-              setTableHeight(response.data.length);
-              setLoading(false);
-              $scope.$emit("onData", response.data);
-              $scope.$emit('onData:' + $scope.gridOptionsDef.namespace, response.data);
-            }, function errorCallback(response) {
-              console.log('Error: ' + response.message);
-            });
-          }
-          else {
-            if (!formio) { return; }
-            $scope.gridOptionsDef.data = [];
-            $scope.$emit("onRequest", $scope.query);
-            $scope.$emit('onRequest:' + $scope.gridOptionsDef.namespace, $scope.query);
-            formio.loadSubmissions({params: $scope.query}, $scope.gridOptionsDef.loadOptions).then(function(submissions) {
-              $scope.gridOptionsDef.totalItems = submissions.serverCount;
-              $scope.gridOptionsDef.data = submissions;
-              setTableHeight(submissions.length);
-              setLoading(false);
-              $scope.$emit("onData", submissions);
-              $scope.$emit('onData:' + $scope.gridOptionsDef.namespace, submissions);
-            });
-          }
 
+              $scope.$emit("onRequest", query || request.params);
+              $scope.$emit('onRequest:' + $scope.gridOptionsDef.namespace, query || request.params);
+              $http.get(endpoint, request).then(function successCallback(response) {
+                if (!response.data) {
+                  response.data = [];
+                }
+                var range = response.headers('Content-Range');
+                if (range) {
+                  range = range.split('/');
+                  if ((range.length > 1) && (range[1] != '*')) {
+                    $scope.gridOptionsDef.totalItems = Number(range[1]);
+                  }
+                }
+                if ($scope.gridOptionsDef.responseData) {
+                  $scope.gridOptionsDef.data = response.data[$scope.gridOptionsDef.responseData];
+                }
+                else {
+                  $scope.gridOptionsDef.data = response.data ? response.data : [];
+                }
+                if ($scope.gridOptionsDef.responseTotal) {
+                  $scope.gridOptionsDef.totalItems = response.data[$scope.gridOptionsDef.responseTotal];
+                }
+                setTableHeight(response.data.length);
+                setLoading(false);
+                $scope.$emit("onData", response.data);
+                $scope.$emit('onData:' + $scope.gridOptionsDef.namespace, response.data);
+              }, function errorCallback(response) {
+                console.log('Error: ' + response.message);
+              });
+            }
+            else {
+              if (!formio) { return; }
+              $scope.gridOptionsDef.data = [];
+              $scope.$emit("onRequest", $scope.query);
+              $scope.$emit('onRequest:' + $scope.gridOptionsDef.namespace, $scope.query);
+              formio.loadSubmissions({params: $scope.query}, $scope.gridOptionsDef.loadOptions).then(function(submissions) {
+                $scope.gridOptionsDef.totalItems = submissions.serverCount;
+                $scope.gridOptionsDef.data = submissions;
+                setTableHeight(submissions.length);
+                setLoading(false);
+                $scope.$emit("onData", submissions);
+                $scope.$emit('onData:' + $scope.gridOptionsDef.namespace, submissions);
+              });
+            }
+          });
         };
 
         var setTableHeight = function(renderableRows) {
@@ -479,6 +484,7 @@ angular.module('ngFormioGrid', [
           }
 
           // Only get the page if the initialLoad variable is true.
+          ready.resolve();
           if ($scope.gridOptionsDef.initialLoad) {
             getPage();
           }
