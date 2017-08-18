@@ -12,10 +12,10 @@
     "form"
   ],
   "dependencies": {
-    "angular": "^1.6.4",
-    "angular-sanitize": "^1.6.4",
-    "angular-ui-grid": "^4.0.4",
-    "ng-formio": "^2.15.0"
+    "angular": "^1.6.5",
+    "angular-sanitize": "^1.6.5",
+    "angular-ui-grid": "^4.0.6",
+    "ng-formio": "^2.21.3"
   },
   "license": "MIT",
   "ignore": [

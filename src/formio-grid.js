@@ -200,7 +200,8 @@ angular.module('ngFormioGrid', [
                     if (term) {
 
                       // Add the term to the query.
-                      $scope.query[filter + '__regex'] = '/' + term + '/i';
+                      // FOR-652
+                      $scope.query[filter + '__regex'] = '/' + FormioUtils.escapeRegExCharacters(term) + '/i';
                     }
                     else {
 
