@@ -182,11 +182,27 @@ angular.module('ngFormioGrid', [
                   if (typeof filter === 'function') {
                     filter($scope.query, term);
                   }
+                  else if (typeof filter === 'object') {
+                    if (filter.type === 'select') {
+                      if (typeof term === 'boolean') {
+                        // Add boolean term to the query.
+                        $scope.query[column.colDef.field] = term;
+                      }
+                      else if (term) {
+                        // Add the term to the query.
+                        $scope.query[column.colDef.field] = term;
+                      }
+                      else {
+                        delete $scope.query[column.colDef.field];
+                      }
+                    }
+                  }
                   else {
                     if (term) {
 
                       // Add the term to the query.
-                      $scope.query[filter + '__regex'] = '/' + term + '/i';
+                      // FOR-652
+                      $scope.query[filter + '__regex'] = '/' + FormioUtils.escapeRegExCharacters(term) + '/i';
                     }
                     else {
 
