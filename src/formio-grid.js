@@ -37,7 +37,8 @@ angular.module('ngFormioGrid', [
       aggregate: '=?',
       columns: '=?',
       buttons: '=?',
-      gridOptions: '=?'
+      gridOptions: '=?',
+      gridApi: '=?'
     },
     link: function(scope, element, attrs) {
       var template = '<div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns ui-grid-selection class="grid"></div>';
