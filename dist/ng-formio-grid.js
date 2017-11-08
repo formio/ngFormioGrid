@@ -250,7 +250,8 @@ angular.module('ngFormioGrid', [
               if (sortColumns.length === 0) {
                 paginationOptions.sort = null;
               } else {
-                setSort(sortColumns[0].sort, sortColumns[0].colDef.field);
+                var lastIndex = sortColumns.length - 1;
+                setSort(sortColumns[lastIndex].sort, sortColumns[lastIndex].colDef.field);
               }
               gridApi.pagination.seek(1);
               getPage();
