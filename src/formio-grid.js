@@ -280,11 +280,9 @@ angular.module('ngFormioGrid', [
             //if (!$scope.gridOptionsDef.columnDefs.length) { return; }
             if (paginationOptions.pageSize) {
               if($scope.limit){
-                console.log("setting 1")
                 $scope.query.limit = $scope.limit
               }
               else{
-                onsole.log("setting 2")
                 $scope.query.limit = paginationOptions.pageSize;
               }
             }
