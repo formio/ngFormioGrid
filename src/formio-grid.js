@@ -38,7 +38,8 @@ angular.module('ngFormioGrid', [
       columns: '=?',
       buttons: '=?',
       gridOptions: '=?',
-      gridApi: '=?'
+      gridApi: '=?',
+      limit: '=?'
     },
     link: function(scope, element, attrs) {
       var template = '<div ui-grid="gridOptionsDef" ui-grid-pagination ui-grid-auto-resize ui-grid-resize-columns ui-grid-move-columns ui-grid-selection class="grid"></div>';
@@ -278,7 +279,12 @@ angular.module('ngFormioGrid', [
 
             //if (!$scope.gridOptionsDef.columnDefs.length) { return; }
             if (paginationOptions.pageSize) {
-              $scope.query.limit = paginationOptions.pageSize;
+              if($scope.limit){
+                $scope.query.limit = $scope.limit
+              }
+              else{
+                $scope.query.limit = paginationOptions.pageSize;
+              }
             }
             if (paginationOptions.pageNumber) {
               $scope.query.skip = (paginationOptions.pageNumber - 1) * paginationOptions.pageSize;
