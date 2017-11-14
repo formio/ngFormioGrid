@@ -163,7 +163,9 @@ angular.module('ngFormioGrid', [
             gridApi.core.on.renderingComplete($scope, function() {
               setLoading(true);
               (function launchDefaultValues() {
-                setSort($scope.gridOptions.sort, $scope.gridOptions.sort.defaultCol);
+                if($scope.gridOptions.sort){
+                  setSort($scope.gridOptions.sort, $scope.gridOptions.sort.defaultCol);
+                }
               })();
 
               // harded coded values
