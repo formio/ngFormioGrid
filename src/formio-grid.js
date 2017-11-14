@@ -165,11 +165,11 @@ angular.module('ngFormioGrid', [
               (function launchDefaultValues() {
                 if($scope.gridOptions.sort){
                   setSort($scope.gridOptions.sort, $scope.gridOptions.sort.defaultCol);
+                }else{
+                  setSort("", "asc");
                 }
               })();
 
-              // harded coded values
-              setSort({direction: "desc", priority: 0}, 'created');
             });
 
             var debounce = 0;
