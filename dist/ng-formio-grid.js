@@ -164,6 +164,12 @@ angular.module('ngFormioGrid', [
             // Say we are now loading.
             gridApi.core.on.renderingComplete($scope, function() {
               setLoading(true);
+              (function launchDefaultValues() {
+                if($scope.gridOptions.sort){
+                  setSort($scope.gridOptions.sort, $scope.gridOptions.sort.defaultCol);
+                }
+              })();
+
             });
 
             var debounce = 0;
