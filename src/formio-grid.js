@@ -128,7 +128,7 @@ angular.module('ngFormioGrid', [
           }
         };
 
-        $scope.gridOptionsDef = angular.merge({
+        $scope.gridOptionsDef = angular.extend({
           namespace: 'row',
           dataRoot: 'data.',
           responseData: '',
@@ -500,7 +500,7 @@ angular.module('ngFormioGrid', [
                 setSort(options.sort, options.field || field);
               }
 
-              addColumn(components[key], options, key);
+              addColumn(components[key] || options.component, options, key);
             });
           }
           else if (form) {
