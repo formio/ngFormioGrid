@@ -386,7 +386,10 @@ angular.module('ngFormioGrid', [
               });
             }
             else {
-              if (!formio) { return; }
+              if (!formio) {
+                setLoading(false);
+                return;
+              }
               $scope.gridOptionsDef.data = [];
               $scope.$emit("onRequest", $scope.query);
               $scope.$emit('onRequest:' + $scope.gridOptionsDef.namespace, $scope.query);
