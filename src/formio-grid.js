@@ -33,6 +33,7 @@ angular.module('ngFormioGrid', [
     replace: true,
     scope: {
       src: '=',
+      service: '=?',
       query: '=?',
       aggregate: '=?',
       columns: '=?',
@@ -75,7 +76,7 @@ angular.module('ngFormioGrid', [
       ) {
         var ready = $q.defer();
         var loadReady = ready.promise;
-        var formio = null;
+        var formio = $scope.service || null;
         var paginationOptions = {
           pageNumber: 1,
           pageSize: 25,
