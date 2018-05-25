@@ -47,6 +47,7 @@ angular.module('ngFormioGrid', [
     replace: true,
     scope: {
       src: '=',
+      service: '=?',
       query: '=?',
       aggregate: '=?',
       columns: '=?',
@@ -89,7 +90,7 @@ angular.module('ngFormioGrid', [
       ) {
         var ready = $q.defer();
         var loadReady = ready.promise;
-        var formio = null;
+        var formio = $scope.service || null;
         var paginationOptions = {
           pageNumber: 1,
           pageSize: 25,
@@ -142,7 +143,7 @@ angular.module('ngFormioGrid', [
           }
         };
 
-        $scope.gridOptionsDef = angular.merge({
+        $scope.gridOptionsDef = angular.extend({
           namespace: 'row',
           dataRoot: 'data.',
           responseData: '',
@@ -400,7 +401,10 @@ angular.module('ngFormioGrid', [
               });
             }
             else {
-              if (!formio) { return; }
+              if (!formio) {
+                setLoading(false);
+                return;
+              }
               $scope.gridOptionsDef.data = [];
               $scope.$emit("onRequest", $scope.query);
               $scope.$emit('onRequest:' + $scope.gridOptionsDef.namespace, $scope.query);
@@ -528,7 +532,7 @@ angular.module('ngFormioGrid', [
                 setSort(options.sort, options.field || field);
               }
 
-              addColumn(components[key], options, key);
+              addColumn(components[key] || options.component, options, key);
             });
           }
           else if (form) {
