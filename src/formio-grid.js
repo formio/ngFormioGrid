@@ -256,7 +256,7 @@ angular.module('ngFormioGrid', [
                 paginationOptions.sort = null;
               } else {
                 var lastIndex = sortColumns.length - 1;
-                setSort(sortColumns[lastIndex].sort, sortColumns[lastIndex].colDef.field);
+                setSort(sortColumns[lastIndex].sort, sortColumns[lastIndex].colDef.sortField || sortColumns[lastIndex].colDef.field);
               }
               gridApi.pagination.seek(1);
               getPage();
@@ -481,7 +481,21 @@ angular.module('ngFormioGrid', [
             };
 
             // Allow for other options.
-            ['sort', 'filterField', 'filter', 'width', 'sortable', 'visible', 'minWidth', 'maxWidth', 'resizable', 'cellClass', 'headerCellClass', 'headerCellTemplate'].forEach(function(option) {
+            [
+              'sort',
+              'sortField',
+              'filterField',
+              'filter',
+              'width',
+              'sortable',
+              'visible',
+              'minWidth',
+              'maxWidth',
+              'resizable',
+              'cellClass',
+              'headerCellClass',
+              'headerCellTemplate'
+            ].forEach(function(option) {
               if (options.hasOwnProperty(option)) {
                 column[option] = options[option];
               }
