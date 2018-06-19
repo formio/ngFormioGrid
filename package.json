@@ -1,6 +1,6 @@
 {
   "name": "ng-formio-grid",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Provides a way to render Form.io forms using the Angular ui-grid.",
   "main": "dist/ng-formio-grid.min.js",
   "scripts": {
@@ -32,7 +32,7 @@
     "angular": "^1.7.2",
     "angular-sanitize": "^1.7.2",
     "angular-ui-grid": "^4.5.1",
-    "ng-formio": "^2.35.2"
+    "ng-formio": "^2.35.3"
   },
   "browserify": {
     "transform": [
