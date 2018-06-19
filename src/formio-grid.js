@@ -164,7 +164,7 @@ angular.module('ngFormioGrid', [
             gridApi.core.on.renderingComplete($scope, function() {
               setLoading(true);
               (function launchDefaultValues() {
-                if($scope.gridOptions.sort){
+                if($scope.gridOptions && $scope.gridOptions.sort){
                   setSort($scope.gridOptions.sort, $scope.gridOptions.sort.defaultCol);
                 }
               })();
@@ -297,7 +297,9 @@ angular.module('ngFormioGrid', [
               $scope.query.skip = (paginationOptions.pageNumber - 1) * paginationOptions.pageSize;
             }
 
-            $scope.query.sort = paginationOptions.sort;
+            if (paginationOptions.sort) {
+              $scope.query.sort = paginationOptions.sort;
+            }
 
             if ($scope.gridOptionsDef.endpoint) {
               var endpoint = $scope.gridOptionsDef.endpoint;
