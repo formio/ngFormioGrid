@@ -500,7 +500,8 @@ angular.module('ngFormioGrid', [
               'resizable',
               'cellClass',
               'headerCellClass',
-              'headerCellTemplate'
+              'headerCellTemplate',
+              'displayName'
             ].forEach(function(option) {
               if (options.hasOwnProperty(option)) {
                 column[option] = options[option];
